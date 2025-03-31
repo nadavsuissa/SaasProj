@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">{{ project.name }} - ניהול משתמשים</h3>
+                    <a href="/projects/{{ project._id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-arrow-right me-1"></i> חזרה לפרויקט
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if success %}
+                    <div class="alert alert-success" role="alert">
+                        {{ success }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Project Owner Section -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">מנהל הפרויקט</h5>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="avatar me-3">
+                                <i class="fas fa-user-circle fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ project.owner }}</h6>
+                                <span class="badge bg-success">מנהל</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Project Members Section -->
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">חברי הפרויקט</h5>
+                        {% if members and members|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>שם משתמש</th>
+                                        <th>אימייל</th>
+                                        <th>הצטרף בתאריך</th>
+                                        {% if is_owner %}
+                                        <th>פעולות</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for member in members %}
+                                    <tr>
+                                        <td>{{ member.username }}</td>
+                                        <td>{{ member.email or 'לא זמין' }}</td>
+                                        <td>{{ member.created_at.strftime('%d/%m/%Y') if member.created_at else 'לא ידוע' }}</td>
+                                        {% if is_owner %}
+                                        <td>
+                                            <form method="post" action="/projects/{{ project._id }}/remove_member/{{ member.username }}" onsubmit="return confirm('האם אתה בטוח שברצונך להסיר משתמש זה?');">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-user-minus me-1"></i> הסר
+                                                </button>
+                                            </form>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info mt-3">
+                            אין חברים נוספים בפרויקט זה כרגע.
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Invite Users Section (Only for project owner) -->
+                    {% if is_owner %}
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2">הזמן משתמשים חדשים</h5>
+                        <form method="post" action="/projects/{{ project._id }}/invite" class="mt-3">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">שם משתמש</label>
+                                <input type="text" class="form-control" id="username" name="username" required
+                                       placeholder="הכנס שם משתמש להזמנה" autocomplete="off">
+                                <div class="form-text">יש להזין שם משתמש של אדם רשום למערכת</div>
+                                <div id="username-suggestions" class="dropdown-menu w-100"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i> שלח הזמנה
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameInput = document.getElementById('username');
+        const suggestionsList = document.getElementById('username-suggestions');
+        
+        if (!usernameInput || !suggestionsList) return;
+        
+        let debounceTimeout;
+        
+        usernameInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(debounceTimeout);
+            
+            // Clear suggestions if query is empty
+            if (query.length < 2) {
+                suggestionsList.innerHTML = '';
+                suggestionsList.classList.remove('show');
+                return;
+            }
+            
+            // Debounce the input to avoid too many requests
+            debounceTimeout = setTimeout(() => {
+                fetch(`/api/users/search?username_prefix=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        suggestionsList.innerHTML = '';
+                        
+                        if (data.users && data.users.length > 0) {
+                            data.users.forEach(username => {
+                                const item = document.createElement('a');
+                                item.classList.add('dropdown-item');
+                                item.href = 'javascript:void(0)';
+                                item.textContent = username;
+                                item.addEventListener('click', () => {
+                                    usernameInput.value = username;
+                                    suggestionsList.classList.remove('show');
+                                });
+                                suggestionsList.appendChild(item);
+                            });
+                            suggestionsList.classList.add('show');
+                        } else {
+                            // No users found
+                            const item = document.createElement('span');
+                            item.classList.add('dropdown-item', 'disabled');
+                            item.textContent = 'לא נמצאו משתמשים';
+                            suggestionsList.appendChild(item);
+                            suggestionsList.classList.add('show');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error searching users:', error);
+                    });
+            }, 300); // 300ms debounce
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!usernameInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                suggestionsList.classList.remove('show');
+            }
+        });
+    });
+</script>
+{% endblock %} 

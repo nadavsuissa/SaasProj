@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    .create-project-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    
+    .form-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 2rem;
+        border-top: 3px solid var(--primary-color);
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .form-header h2 {
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+    }
+    
+    .form-header p {
+        color: var(--text-light);
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    textarea.form-control {
+        min-height: 150px;
+        resize: vertical;
+    }
+    
+    .form-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+    }
+    
+    .form-info {
+        background-color: rgba(59, 130, 246, 0.1);
+        border-right: 3px solid var(--primary-color);
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+    
+    .form-info h3 {
+        color: var(--primary-color);
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-info p {
+        color: var(--text-light);
+        margin: 0;
+    }
+    
+    .input-group {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .input-group .form-group {
+        flex: 1;
+    }
+    
+    .error-message {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .input-group {
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .form-buttons {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .form-buttons .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="create-project-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h2>צור פרויקט חדש</h2>
+            <p>התחל פרויקט בנייה חדש וקבל סיוע מבוסס בינה מלאכותית, ניהול משימות ועוד.</p>
+        </div>
+        
+        {% if error %}
+        <div class="error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+        
+        <div class="form-info">
+            <h3><i class="fas fa-info-circle"></i> עוזר AI לפרויקט</h3>
+            <p>כל פרויקט מגיע עם עוזר AI ייעודי המאומן בידע בנייה כדי לסייע לך בשאלות, תכנון ופתרון בעיות.</p>
+        </div>
+        
+        <form action="/projects/create" method="post">
+            <div class="input-group">
+                <div class="form-group">
+                    <label for="name">שם הפרויקט</label>
+                    <input type="text" id="name" name="name" class="form-control" required placeholder="הזן את שם הפרויקט">
+                </div>
+                
+                <div class="form-group">
+                    <label for="project_type">סוג הפרויקט</label>
+                    <select id="project_type" name="project_type" class="form-control" required>
+                        <option value="" disabled selected>בחר סוג פרויקט</option>
+                        <option value="construction">בנייה</option>
+                        <option value="renovation">שיפוץ</option>
+                        <option value="maintenance">תחזוקה</option>
+                        <option value="residential">מגורים</option>
+                        <option value="commercial">מסחרי</option>
+                        <option value="infrastructure">תשתיות</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">תיאור הפרויקט</label>
+                <textarea id="description" name="description" class="form-control" required placeholder="תאר את הפרויקט שלך בפירוט. כלול מידע על מיקום, היקף, לוח זמנים ודרישות ספציפיות."></textarea>
+            </div>
+            
+            <div class="form-buttons">
+                <a href="/myprojects" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right me-1"></i> ביטול
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-1"></i> צור פרויקט
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('name');
+        const descriptionInput = document.getElementById('description');
+        
+        // Focus the name input on page load
+        if (nameInput) {
+            nameInput.focus();
+        }
+        
+        // Auto-resize textarea as user types
+        if (descriptionInput) {
+            function autoResize() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            }
+            
+            descriptionInput.addEventListener('input', autoResize);
+        }
+    });
+</script>
+{% endblock %} 

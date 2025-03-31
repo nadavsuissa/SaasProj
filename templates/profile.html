@@ -1,0 +1,644 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    :root {
+        --card-border-radius: 12px;
+        --profile-primary: #3b82f6;
+        --profile-primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --profile-secondary-gradient: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        --transition-speed: 0.2s;
+    }
+    
+    /* Profile header section */
+    .profile-header {
+        background: var(--profile-secondary-gradient);
+        color: white;
+        border-radius: var(--card-border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+    }
+    
+    .profile-avatar {
+        width: 85px;
+        height: 85px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+        margin-right: 1.5rem;
+    }
+    
+    .profile-avatar i {
+        font-size: 2.5rem;
+        color: white;
+    }
+    
+    .profile-info {
+        flex-grow: 1;
+    }
+    
+    .profile-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .profile-since {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin: 0;
+    }
+    
+    /* Content cards */
+    .profile-card {
+        border-radius: var(--card-border-radius);
+        border: none;
+        box-shadow: var(--card-shadow);
+        transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        margin-bottom: 1.25rem;
+        overflow: hidden;
+        background: white;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .profile-card-header {
+        padding: 0.85rem 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        font-size: 1rem;
+        color: #333;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .profile-card-header i {
+        margin-left: 0.5rem;
+        color: var(--profile-primary);
+    }
+    
+    .profile-card-body {
+        padding: 1.25rem;
+    }
+    
+    /* Form elements */
+    .form-control {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: none;
+        transition: all var(--transition-speed);
+        font-size: 0.9rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--profile-primary);
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 0.4rem;
+        color: #555;
+    }
+    
+    /* Buttons */
+    .btn-profile {
+        border-radius: 8px;
+        padding: 0.5rem 1.1rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 3px 8px rgba(37, 117, 252, 0.15);
+        transition: all var(--transition-speed);
+    }
+    
+    .btn-profile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(37, 117, 252, 0.25);
+    }
+    
+    /* Task list */
+    .task-list-item {
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: background-color var(--transition-speed);
+    }
+    
+    .task-list-item:last-child {
+        border-bottom: none;
+    }
+    
+    .task-list-item:hover {
+        background-color: #f9fafc;
+    }
+    
+    .task-list-item.new {
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+    
+    .task-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        color: #333;
+    }
+    
+    .task-project {
+        font-size: 0.8rem;
+        color: #777;
+        margin-bottom: 0.5rem;
+    }
+    
+    .task-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .task-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+    }
+    
+    .task-action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+    
+    /* Stat cards */
+    .stats-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        transition: all var(--transition-speed);
+        flex-grow: 1;
+    }
+    
+    .stat-card:hover {
+        background: white;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--profile-primary);
+        font-size: 1.2rem;
+        margin-right: 0.75rem;
+    }
+    
+    .stat-content {
+        flex-grow: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        color: #333;
+        line-height: 1.2;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+    
+    /* Invitations */
+    .invitation-list {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .invitation-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        transition: background-color var(--transition-speed);
+    }
+    
+    .invitation-item:last-child {
+        border-bottom: none;
+    }
+    
+    .invitation-item:hover {
+        background-color: #f9fafc;
+    }
+    
+    .invitation-project {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+        color: #333;
+    }
+    
+    .invitation-sender {
+        font-size: 0.8rem;
+        color: #777;
+    }
+    
+    .invitation-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .invitation-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+    
+    /* Actions section */
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .action-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all var(--transition-speed);
+        text-decoration: none;
+    }
+    
+    .action-btn-primary {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--profile-primary);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+    
+    .action-btn-primary:hover {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: var(--profile-primary);
+    }
+    
+    .action-btn-danger {
+        background-color: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+    
+    .action-btn-danger:hover {
+        background-color: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+    }
+    
+    /* Empty states */
+    .empty-state {
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 2rem;
+        color: #cbd5e1;
+        margin-bottom: 0.75rem;
+    }
+    
+    .empty-state-text {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 1.25rem;
+        }
+        
+        .profile-avatar {
+            margin-right: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-name {
+            justify-content: center;
+        }
+        
+        .stats-wrapper {
+            flex-direction: column;
+        }
+        
+        .stat-card {
+            width: 100%;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-name">{{ user.username }}</h1>
+            <p class="profile-since">
+                חבר מאז {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'לא ידוע' }}
+            </p>
+        </div>
+    </div>
+    
+    {% if error %}
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if success %}
+    <div class="alert alert-success" role="alert">
+        {{ success }}
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+            <!-- Personal Information -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <i class="fas fa-user"></i> פרטים אישיים
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <form method="post" action="/update_profile">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">כתובת אימייל</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email or '' }}" placeholder="הזן את כתובת האימייל שלך">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-profile">
+                            <i class="fas fa-save me-1"></i>
+                            שמור שינויים
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Project Invitations Section -->
+            {% if invitations and invitations|length > 0 %}
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <i class="fas fa-envelope-open-text"></i> הזמנות לפרויקט
+                    </div>
+                    <span class="badge bg-primary rounded-pill">{{ invitations|length }}</span>
+                </div>
+                <div class="profile-card-body p-0">
+                    <div class="invitation-list">
+                        {% for invitation in invitations %}
+                        <div class="invitation-item">
+                            <div>
+                                <div class="invitation-project">{{ invitation.project_name }}</div>
+                                <div class="invitation-sender">הוזמנת על ידי {{ invitation.sender }}</div>
+                            </div>
+                            <div class="invitation-actions">
+                                <form action="/invitations/{{ invitation._id }}/accept" method="post">
+                                    <button type="submit" class="btn btn-success invitation-btn">
+                                        <i class="fas fa-check"></i> אשר
+                                    </button>
+                                </form>
+                                <form action="/invitations/{{ invitation._id }}/reject" method="post">
+                                    <button type="submit" class="btn btn-danger invitation-btn">
+                                        <i class="fas fa-times"></i> דחה
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Tasks Section -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <i class="fas fa-tasks"></i> משימות שלי
+                    </div>
+                    {% if unread_tasks and unread_tasks > 0 %}
+                    <span class="badge bg-danger rounded-pill">{{ unread_tasks }}</span>
+                    {% endif %}
+                </div>
+                <div class="profile-card-body p-0">
+                    {% if tasks and tasks|length > 0 %}
+                    <div class="task-list">
+                        {% for task in tasks %}
+                        <div class="task-list-item {% if not task.is_read %}new{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="task-title">
+                                        <a href="/tasks/{{ task._id }}" class="text-decoration-none">
+                                            {{ task.title }}
+                                            {% if not task.is_read %}
+                                            <span class="badge bg-danger rounded-pill ms-2">חדש</span>
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                    <div class="task-project">
+                                        <i class="fas fa-project-diagram me-1"></i> {{ task.project_name }}
+                                    </div>
+                                    <div class="task-badges">
+                                        {% if task.status == 'pending' %}
+                                        <span class="badge bg-warning task-badge">ממתין</span>
+                                        {% elif task.status == 'in_progress' %}
+                                        <span class="badge bg-primary task-badge">בעבודה</span>
+                                        {% elif task.status == 'completed' %}
+                                        <span class="badge bg-success task-badge">הושלם</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary task-badge">{{ task.status }}</span>
+                                        {% endif %}
+                                        
+                                        {% if task.priority == 'high' %}
+                                        <span class="badge bg-danger task-badge">עדיפות גבוהה</span>
+                                        {% elif task.priority == 'medium' %}
+                                        <span class="badge bg-info task-badge">עדיפות בינונית</span>
+                                        {% elif task.priority == 'low' %}
+                                        <span class="badge bg-secondary task-badge">עדיפות נמוכה</span>
+                                        {% endif %}
+                                        
+                                        {% if task.due_date %}
+                                        <span class="badge bg-dark task-badge">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            {{ task.due_date.strftime('%d/%m/%Y') }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if task.status != 'completed' %}
+                                    <div class="btn-group">
+                                        <form action="/tasks/{{ task._id }}/update" method="post" class="d-inline">
+                                            <input type="hidden" name="status" value="in_progress">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary task-action-btn" title="התחל עבודה">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                        </form>
+                                        <form action="/tasks/{{ task._id }}/update" method="post" class="d-inline ms-1">
+                                            <input type="hidden" name="status" value="completed">
+                                            <button type="submit" class="btn btn-sm btn-outline-success task-action-btn" title="סמן כהושלם">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <p class="empty-state-text">אין לך משימות כרגע</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Statistics -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <i class="fas fa-chart-bar"></i> סטטיסטיקות
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <div class="stats-wrapper">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ projects|length if projects else 0 }}</div>
+                                <div class="stat-label">פרויקטים</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">{{ tasks|length if tasks else 0 }}</div>
+                                <div class="stat-label">משימות</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <div>
+                        <i class="fas fa-cog"></i> פעולות
+                    </div>
+                </div>
+                <div class="profile-card-body">
+                    <div class="action-buttons">
+                        <a href="/myprojects" class="action-btn action-btn-primary">
+                            <i class="fas fa-project-diagram"></i>
+                            הפרויקטים שלי
+                        </a>
+                        <button class="action-btn action-btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="fas fa-trash-alt"></i>
+                            מחק חשבון
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteAccountModalLabel">מחיקת חשבון</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-exclamation-triangle text-danger fa-4x mb-3"></i>
+                </div>
+                <p class="text-danger fw-bold">אזהרה: פעולה זו תמחק את החשבון שלך לצמיתות!</p>
+                <p>כל הפרויקטים והנתונים המשויכים לחשבונך יימחקו ולא יהיה ניתן לשחזר אותם.</p>
+                <p class="fw-bold">האם אתה בטוח שברצונך למחוק את חשבונך?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">בטל</button>
+                <form method="post" action="/delete_account">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> מחק חשבון
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

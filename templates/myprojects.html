@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    :root {
+        --card-border-radius: 12px;
+        --transition-speed: 0.2s;
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        --hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .page-header {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    
+    .page-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(90deg, var(--bs-primary) 0%, #4d8bff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .card-project {
+        border-radius: var(--card-border-radius);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all var(--transition-speed) ease;
+        height: 100%;
+        border: none;
+        background: #ffffff;
+    }
+    
+    .card-project:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--hover-shadow);
+    }
+    
+    .card-project .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.25rem;
+        background: rgba(249, 250, 251, 0.5);
+    }
+    
+    .card-project .card-body {
+        padding: 1rem 1.25rem;
+    }
+    
+    .card-project .card-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 0.75rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: transparent;
+    }
+    
+    .project-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+        line-height: 1.3;
+    }
+    
+    .project-description {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: #555;
+        line-height: 1.4;
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .project-timestamp {
+        font-size: 0.75rem;
+        color: #777;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .project-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    
+    .project-status-badge.bg-planning {
+        background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+        color: white;
+    }
+    
+    .project-status-badge.bg-in_progress {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        color: white;
+    }
+    
+    .project-status-badge.bg-completed {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        color: white;
+    }
+    
+    /* Keep backward compatibility */
+    .project-status-badge.bg-success {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+    }
+    
+    .project-status-badge.bg-warning {
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    }
+    
+    .filters-section {
+        background: #ffffff;
+        border-radius: var(--card-border-radius);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.5rem 0.85rem;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: #444;
+        font-size: 0.9rem;
+    }
+    
+    .btn-primary {
+        border-radius: 8px;
+        padding: 0.5rem 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.15);
+        transition: all 0.25s ease;
+        background: linear-gradient(135deg, var(--bs-primary), #2563eb);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(59, 130, 246, 0.25);
+        background: linear-gradient(135deg, #4287f5, #2563eb);
+    }
+    
+    .btn-view {
+        border-radius: 6px;
+        padding: 0.35rem 0.75rem;
+        font-weight: 600;
+        font-size: 0.8rem;
+        background: rgba(59, 130, 246, 0.1);
+        border: none;
+        color: var(--bs-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-view:hover {
+        transform: translateY(-1px);
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--bs-primary);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+        border-radius: var(--card-border-radius);
+        background: #ffffff;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: rgba(59, 130, 246, 0.2);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: #333;
+    }
+    
+    .empty-state-message {
+        color: #666;
+        max-width: 500px;
+        margin: 0 auto 1.5rem;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+    
+    .project-count {
+        font-size: 0.85rem;
+        color: #777;
+        margin-top: 0.75rem;
+    }
+    
+    /* Status section headers */
+    .status-section {
+        margin-bottom: 1.5rem;
+    }
+    
+    .status-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .status-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        background: rgba(0, 0, 0, 0.05);
+        color: #555;
+    }
+    
+    .status-planning .status-title {
+        color: #2563eb;
+    }
+    
+    .status-in_progress .status-title {
+        color: #d97706;
+    }
+    
+    .status-completed .status-title {
+        color: #059669;
+    }
+    
+    .status-badge.bg-planning {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+    
+    .status-badge.bg-in_progress {
+        background: rgba(217, 119, 6, 0.1);
+        color: #d97706;
+    }
+    
+    .status-badge.bg-completed {
+        background: rgba(5, 150, 105, 0.1);
+        color: #059669;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: start !important;
+        }
+        
+        .page-title {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row align-items-center page-header">
+    <div class="col-lg-8 col-md-7">
+        <h2 class="page-title">הפרויקטים שלי</h2>
+    </div>
+    <div class="col-lg-4 col-md-5 text-end">
+        <a href="/projects/new" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> צור פרויקט חדש
+        </a>
+    </div>
+</div>
+
+<div class="filters-section">
+    <div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="form-group">
+                <label for="search-projects" class="form-label">חיפוש פרויקטים</label>
+            <input type="text" id="search-projects" class="form-control" placeholder="הקלד לחיפוש...">
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+                <label for="filter-type" class="form-label">סוג פרויקט</label>
+                <select id="filter-type" class="form-select">
+                <option value="all">כל הסוגים</option>
+                <option value="construction">בנייה</option>
+                <option value="renovation">שיפוץ</option>
+                <option value="maintenance">תחזוקה</option>
+                <option value="other">אחר</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+                <label for="filter-sort" class="form-label">מיון</label>
+                <select id="filter-sort" class="form-select">
+                <option value="newest">החדש ביותר</option>
+                <option value="oldest">הישן ביותר</option>
+                <option value="alphabetical">לפי א-ב</option>
+            </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if projects and projects|length > 0 %}
+    <!-- Projects by status sections -->
+    <div id="project-sections">
+        <!-- Planning Projects -->
+        <div class="status-section status-planning" id="planning-section">
+            <div class="status-header">
+                <h3 class="status-title">
+                    <i class="fas fa-pencil-ruler"></i> בתכנון
+                </h3>
+                <span class="status-badge bg-planning ms-2" id="planning-count">0</span>
+            </div>
+            <div class="row" id="planning-projects">
+                <!-- Planning projects will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- In Progress Projects -->
+        <div class="status-section status-in_progress" id="in_progress-section">
+            <div class="status-header">
+                <h3 class="status-title">
+                    <i class="fas fa-hammer"></i> בביצוע
+                </h3>
+                <span class="status-badge bg-in_progress ms-2" id="in_progress-count">0</span>
+            </div>
+            <div class="row" id="in_progress-projects">
+                <!-- In Progress projects will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Completed Projects -->
+        <div class="status-section status-completed" id="completed-section">
+            <div class="status-header">
+                <h3 class="status-title">
+                    <i class="fas fa-check-circle"></i> גמור
+                </h3>
+                <span class="status-badge bg-completed ms-2" id="completed-count">0</span>
+            </div>
+            <div class="row" id="completed-projects">
+                <!-- Completed projects will be inserted here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden original grid for search/filter functionality -->
+    <div class="row d-none" id="project-grid">
+        {% for project in projects %}
+        <div class="col-lg-4 col-md-6 mb-3 project-card" data-type="{{ project.type }}" data-status="{{ project.status }}">
+            <div class="card card-project">
+                <div class="card-header">
+                    <div class="project-type-badge">
+                        <i class="fas fa-tag me-1"></i> {{ project.type|title }}
+                    </div>
+                    <h5 class="card-title">{{ project.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="project-description">{{ project.description }}</p>
+                    <div class="project-status-badge bg-{{ project.status }} text-white">
+                        {% if project.status == 'planning' %}
+                            <i class="fas fa-pencil-ruler me-1"></i> בתכנון
+                        {% elif project.status == 'in_progress' %}
+                            <i class="fas fa-hammer me-1"></i> בביצוע
+                        {% elif project.status == 'completed' %}
+                            <i class="fas fa-check-circle me-1"></i> גמור
+                        {% else %}
+                            <i class="fas fa-circle me-1"></i> {{ project.status }}
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="project-timestamp">
+                        <i class="fas fa-calendar-alt"></i> {{ project.created_at.strftime('%b %d, %Y') }}
+                    </div>
+                    <a href="/projects/{{ project._id }}" class="btn-view">
+                        <i class="fas fa-eye"></i> צפייה
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-end mt-2">
+        <p class="project-count">מציג <span id="visible-count">{{ projects|length }}</span> פרויקט<span id="plural-suffix">{{ 'ים' if projects|length != 1 else '' }}</span></p>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <h3 class="empty-state-title">אין פרויקטים עדיין</h3>
+        <p class="empty-state-message">
+            התחל על ידי יצירת פרויקט הבנייה הראשון שלך. תוכל לשוחח עם העוזר המלאכותי, לנהל משימות ועוד.
+        </p>
+        <div>
+            <a href="/projects/new" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> צור פרויקט חדש
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-projects');
+        const typeFilter = document.getElementById('filter-type');
+        const sortFilter = document.getElementById('filter-sort');
+        const projectGrid = document.getElementById('project-grid');
+        const visibleCountSpan = document.getElementById('visible-count');
+        const pluralSuffixSpan = document.getElementById('plural-suffix');
+        
+        // Status sections
+        const planningSection = document.getElementById('planning-section');
+        const inProgressSection = document.getElementById('in_progress-section');
+        const completedSection = document.getElementById('completed-section');
+        
+        // Status counts
+        const planningCount = document.getElementById('planning-count');
+        const inProgressCount = document.getElementById('in_progress-count');
+        const completedCount = document.getElementById('completed-count');
+        
+        // Status project containers
+        const planningProjects = document.getElementById('planning-projects');
+        const inProgressProjects = document.getElementById('in_progress-projects');
+        const completedProjects = document.getElementById('completed-projects');
+        
+        if (!projectGrid) return; // No projects to filter
+        
+        const projectCards = projectGrid.querySelectorAll('.project-card');
+        
+        // Initialize project sections
+        function organizeProjectsByStatus() {
+            // Clear counters
+            let planningTotal = 0;
+            let inProgressTotal = 0;
+            let completedTotal = 0;
+            
+            // Clear sections
+            planningProjects.innerHTML = '';
+            inProgressProjects.innerHTML = '';
+            completedProjects.innerHTML = '';
+            
+            // Get all visible projects
+            const visibleProjects = Array.from(projectCards).filter(card => 
+                card.style.display !== 'none');
+            
+            // Organize by status
+            visibleProjects.forEach(card => {
+                const status = card.getAttribute('data-status');
+                const clone = card.cloneNode(true);
+                clone.classList.remove('d-none');
+                
+                if (status === 'planning') {
+                    planningProjects.appendChild(clone);
+                    planningTotal++;
+                } else if (status === 'in_progress') {
+                    inProgressProjects.appendChild(clone);
+                    inProgressTotal++;
+                } else if (status === 'completed') {
+                    completedProjects.appendChild(clone);
+                    completedTotal++;
+                }
+            });
+            
+            // Update counts
+            planningCount.textContent = planningTotal;
+            inProgressCount.textContent = inProgressTotal;
+            completedCount.textContent = completedTotal;
+            
+            // Show/hide sections based on content
+            planningSection.style.display = planningTotal > 0 ? 'block' : 'none';
+            inProgressSection.style.display = inProgressTotal > 0 ? 'block' : 'none';
+            completedSection.style.display = completedTotal > 0 ? 'block' : 'none';
+            
+            // Update total count
+            const totalVisible = planningTotal + inProgressTotal + completedTotal;
+            visibleCountSpan.textContent = totalVisible;
+            pluralSuffixSpan.textContent = totalVisible !== 1 ? 'ים' : '';
+        }
+        
+        // Filter projects based on search and type
+        function filterProjects() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const typeValue = typeFilter.value;
+            
+            projectCards.forEach(card => {
+                // Get project name and description for searching
+                const projectName = card.querySelector('h5').textContent.toLowerCase();
+                const projectDesc = card.querySelector('.project-description').textContent.toLowerCase();
+                const projectType = card.getAttribute('data-type').toLowerCase();
+                
+                // Check if project matches filters
+                const matchesSearch = projectName.includes(searchTerm) || projectDesc.includes(searchTerm);
+                const matchesType = typeValue === 'all' || projectType === typeValue;
+                
+                // Show/hide card based on filters
+                if (matchesSearch && matchesType) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Update the status sections
+            organizeProjectsByStatus();
+        }
+        
+        // Sort projects
+        function sortProjects() {
+            const sortValue = sortFilter.value;
+            const cards = Array.from(projectCards);
+            
+            cards.sort((a, b) => {
+                if (sortValue === 'newest' || sortValue === 'oldest') {
+                    const dateA = new Date(a.querySelector('.project-timestamp').textContent);
+                    const dateB = new Date(b.querySelector('.project-timestamp').textContent);
+                    
+                    return sortValue === 'newest' ? dateB - dateA : dateA - dateB;
+                } else if (sortValue === 'alphabetical') {
+                    const nameA = a.querySelector('h5').textContent;
+                    const nameB = b.querySelector('h5').textContent;
+                    
+                    return nameA.localeCompare(nameB);
+                }
+                
+                return 0;
+            });
+            
+            // Reappend sorted cards to the original grid
+            cards.forEach(card => {
+                projectGrid.appendChild(card);
+            });
+            
+            // Update status sections
+            organizeProjectsByStatus();
+        }
+        
+        // Initialize on page load
+        organizeProjectsByStatus();
+        
+        // Event listeners
+        if (searchInput) {
+            searchInput.addEventListener('input', filterProjects);
+        }
+        
+        if (typeFilter) {
+            typeFilter.addEventListener('change', filterProjects);
+        }
+        
+        if (sortFilter) {
+            sortFilter.addEventListener('change', sortProjects);
+        }
+    });
+</script>
+{% endblock %} 

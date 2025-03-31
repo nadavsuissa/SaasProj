@@ -1,0 +1,833 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    :root {
+        --card-border-radius: 12px;
+        --section-border-radius: 8px;
+        --transition-speed: 0.2s;
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    
+    .task-detail-container {
+        max-width: 1140px;
+        margin: 0 auto;
+        padding: 0.75rem 0.75rem 1rem 0.75rem;
+    }
+    
+    .task-detail-card {
+        border-radius: var(--card-border-radius);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all var(--transition-speed) ease;
+        border: none;
+        background: #fff;
+        margin-bottom: 1rem;
+    }
+    
+    .task-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+        padding: 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        position: relative;
+    }
+    
+    .task-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        color: #333;
+        line-height: 1.25;
+        text-align: right;
+    }
+    
+    .header-content {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        margin-top: 2.5rem;
+        gap: 2rem;
+    }
+    
+    .task-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0;
+        min-width: 280px;
+    }
+    
+    .title-section {
+        flex: 1;
+    }
+    
+    .task-body {
+        padding: 1.25rem;
+        background: #fff;
+    }
+    
+    .task-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        padding: 0.85rem;
+        background-color: rgba(0, 123, 255, 0.02);
+        border-radius: var(--section-border-radius);
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.01);
+    }
+    
+    .task-info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .task-info-item i {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 253, 0.08);
+        border-radius: 4px;
+    }
+    
+    .task-info-item span {
+        font-size: 0.85rem;
+    }
+    
+    .content-section {
+        margin-bottom: 1rem;
+    }
+    
+    .task-description {
+        background: #f9fafc;
+        padding: 1.25rem;
+        border-radius: var(--section-border-radius);
+        white-space: pre-line;
+        border-left: 3px solid var(--primary-color);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        font-size: 0.92rem;
+        line-height: 1.5;
+        color: #444;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.6rem;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.7rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+    }
+    
+    .task-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .task-actions .btn {
+        padding: 0.4rem 0.9rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all var(--transition-speed) ease;
+    }
+    
+    .task-actions .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    }
+    
+    .avatar-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #f0f4ff, #e6f0ff);
+        color: var(--bs-primary);
+        font-size: 0.95rem;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(13, 110, 253, 0.1);
+        position: relative;
+        border: 1px solid rgba(13, 110, 253, 0.15);
+    }
+    
+    .avatar-initials:before {
+        content: '\f007';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        opacity: 0.1;
+        font-size: 1.2rem;
+        z-index: 0;
+    }
+    
+    .avatar-large {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+    }
+    
+    .status-indicator {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        z-index: 2;
+        display: flex;
+        gap: 5px;
+    }
+    
+    .project-link {
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .project-link:hover {
+        text-decoration: underline;
+    }
+    
+    .related-info-card {
+        border-radius: var(--card-border-radius);
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        height: auto;
+        border: none;
+        background: #fff;
+        margin-bottom: 1rem;
+    }
+    
+    .card-header {
+        padding: 0.9rem 1.15rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
+    .card-body {
+        padding: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .card-body h6 {
+        font-size: 0.95rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    .progress {
+        height: 8px;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 0.03);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    
+    .progress-bar {
+        border-radius: 8px;
+        transition: width 0.8s ease;
+        background-image: linear-gradient(to right, #0d6efd, #408cfd);
+    }
+    
+    .progress-bar.bg-warning {
+        background-image: linear-gradient(to right, #ffc107, #ffda6a);
+    }
+    
+    .progress-bar.bg-success {
+        background-image: linear-gradient(to right, #198754, #20c997);
+    }
+    
+    .comment-item {
+        border-radius: var(--section-border-radius);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        transition: all var(--transition-speed) ease;
+        margin-bottom: 0.85rem;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+    
+    .comment-header {
+        padding: 0.6rem 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        background-color: rgba(0, 0, 0, 0.01);
+    }
+    
+    .comment-content {
+        padding: 0.85rem 1rem;
+        line-height: 1.4;
+        color: #444;
+        font-size: 0.92rem;
+    }
+    
+    .add-comment form {
+        background-color: #f9fafc;
+        padding: 1rem;
+        border-radius: var(--section-border-radius);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+    
+    .add-comment .form-control, 
+    .add-comment .form-select {
+        border-radius: 6px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 0.5rem 0.85rem;
+        font-size: 0.9rem;
+    }
+    
+    .add-comment .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        color: #495057;
+    }
+    
+    .add-comment-grid {
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .comment-submit {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .breadcrumb {
+        background-color: transparent;
+        padding: 0.3rem 0;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    
+    .section-title i {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(13, 110, 253, 0.08);
+        border-radius: 5px;
+    }
+    
+    .badge {
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+    }
+    
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        font-size: 0.85rem;
+    }
+    
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+    
+    /* Tabs for comments and description */
+    .task-tabs {
+        margin-top: 1rem;
+    }
+    
+    .nav-tabs {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: #495057;
+        font-weight: 600;
+        padding: 0.6rem 1rem;
+        border-radius: 0;
+        position: relative;
+        font-size: 0.9rem;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        background-color: transparent;
+    }
+    
+    .nav-tabs .nav-link.active:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--primary-color);
+    }
+    
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+    }
+    
+    .tab-content > .tab-pane {
+        padding-top: 0.3rem;
+    }
+    
+    /* Compact scrollable sidebar */
+    .sidebar-section {
+        margin-bottom: 1rem;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .sidebar-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 992px) {
+        .status-indicator {
+            position: relative;
+            top: 0;
+            right: 0;
+            margin-bottom: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+        
+        .task-header {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+        
+        .task-actions {
+            flex-wrap: wrap;
+        }
+        
+        .task-actions form {
+            width: 100%;
+        }
+        
+        .task-actions .btn {
+            width: 100%;
+            margin-bottom: 0.4rem;
+        }
+        
+        .sidebar-section {
+            position: static;
+        }
+    }
+    
+    @media (max-width: 767px) {
+        .header-content {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .task-meta {
+            min-width: auto;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container task-detail-container">
+    <div class="mb-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/profile">הפרופיל שלי</a></li>
+                <li class="breadcrumb-item"><a href="/projects/{{ project._id }}">{{ project.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ task.title }}</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="task-detail-card">
+                <div class="task-header">
+                    <div class="status-indicator">
+                        {% if task.status == 'pending' %}
+                        <span class="status-badge bg-warning text-dark">ממתין</span>
+                        {% elif task.status == 'in_progress' %}
+                        <span class="status-badge bg-primary text-white">בעבודה</span>
+                        {% elif task.status == 'completed' %}
+                        <span class="status-badge bg-success text-white">הושלם</span>
+                        {% else %}
+                        <span class="status-badge bg-secondary text-white">{{ task.status }}</span>
+                        {% endif %}
+                        
+                        {% if task.priority == 'high' %}
+                        <span class="status-badge bg-danger text-white">עדיפות גבוהה</span>
+                        {% elif task.priority == 'medium' %}
+                        <span class="status-badge bg-info text-white">עדיפות בינונית</span>
+                        {% elif task.priority == 'low' %}
+                        <span class="status-badge bg-secondary text-white">עדיפות נמוכה</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="header-content">
+                        <div class="title-section">
+                            <h2 class="task-title">{{ task.title }}</h2>
+                        </div>
+                        
+                        <div class="task-meta">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar-initials avatar-large me-2">
+                                    {{ (task.creator|default(project.owner))[:1].upper() }}
+                                </span>
+                                <div>
+                                    <div class="text-muted small">נוצר על ידי</div>
+                                    <div class="fw-bold">{{ task.creator|default(project.owner) }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center ms-1 me-1">
+                                <i class="fas fa-arrow-left text-muted"></i>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <span class="avatar-initials avatar-large me-2">
+                                    {{ task.assigned_to[:1].upper() }}
+                                </span>
+                                <div>
+                                    <div class="text-muted small">משוייך ל</div>
+                                    <div class="fw-bold">{{ task.assigned_to }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="task-body">
+                    <div class="task-info">
+                        <div class="task-info-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>נוצר ב: <strong>{{ task.created_at.strftime('%d/%m/%Y %H:%M') }}</strong></span>
+                        </div>
+                        
+                        {% if task.due_date %}
+                        <div class="task-info-item">
+                            {% set days_left = (task.due_date - now).days if now is defined else 0 %}
+                            <i class="fas fa-calendar-check {% if days_left < 0 %}text-danger{% elif days_left < 3 %}text-warning{% endif %}"></i>
+                            <span>תאריך יעד: 
+                                <strong class="{% if days_left < 0 %}text-danger{% elif days_left < 3 %}text-warning{% endif %}">
+                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                    {% if days_left < 0 %}
+                                    (מאחר ב-{{ days_left|abs }} ימים)
+                                    {% elif days_left == 0 %}
+                                    (היום!)
+                                    {% elif days_left == 1 %}
+                                    (מחר)
+                                    {% elif days_left < 7 %}
+                                    (בעוד {{ days_left }} ימים)
+                                    {% endif %}
+                                </strong>
+                            </span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if task.completed_at %}
+                        <div class="task-info-item">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <span>הושלם ב: <strong>{{ task.completed_at.strftime('%d/%m/%Y %H:%M') }}</strong></span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Task Description Section -->
+                    <div class="task-description content-section">
+                        {{ task.description }}
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="content-section">
+                        <h5 class="section-title mb-3">
+                            <i class="fas fa-comments"></i>
+                            תגובות
+                            {% if task.comments %}
+                            <span class="badge bg-primary rounded-pill ms-1">{{ task.comments|length }}</span>
+                            {% endif %}
+                        </h5>
+                        
+                        <!-- Comments List -->
+                        <div class="comments-list">
+                            {% if task.comments %}
+                                {% for comment in task.comments %}
+                                <div class="comment-item">
+                                    <div class="comment-header d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar-initials me-2">
+                                                {{ comment.author[:1].upper() }}
+                                            </span>
+                                            <div>
+                                                <div class="fw-bold">{{ comment.author }}</div>
+                                                <div class="text-muted small">{{ comment.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+                                            </div>
+                                        </div>
+                                        {% if comment.type == 'status' %}
+                                        <span class="badge bg-primary">עדכון סטטוס</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="comment-content">
+                                        {{ comment.content }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                                    <p>אין תגובות עדיין.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Add Comment Form -->
+                        <div class="add-comment mt-3">
+                            <form action="/tasks/{{ task._id }}/comments" method="post">
+                                <div class="add-comment-grid">
+                                    <div>
+                                        <label for="commentType" class="form-label fw-bold">סוג התגובה:</label>
+                                        <select class="form-select" id="commentType" name="type">
+                                            <option value="comment">תגובה</option>
+                                            <option value="status">עדכון סטטוס</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="commentContent" class="form-label fw-bold">הודעה:</label>
+                                        <textarea class="form-control" id="commentContent" name="content" rows="2" required></textarea>
+                                    </div>
+                                </div>
+                                <div class="comment-submit">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane me-1"></i> שלח תגובה
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="task-actions">
+                        {% if task.status != 'completed' %}
+                        <form action="/tasks/{{ task._id }}/update" method="post" class="d-inline">
+                            <input type="hidden" name="status" value="in_progress">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play me-1"></i> התחל עבודה
+                            </button>
+                        </form>
+                        <form action="/tasks/{{ task._id }}/update" method="post" class="d-inline">
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i> סמן כהושלם
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        {% if can_edit %}
+                        <div class="ms-auto">
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal">
+                                <i class="fas fa-trash me-1"></i> מחק משימה
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="sidebar-section">
+                <div class="sidebar-stats">
+                    <!-- Task Stats Card -->
+                    <div class="related-info-card">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="fas fa-chart-pie me-2 text-primary"></i>
+                            <h5 class="fw-bold">סטטיסטיקות</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="stat-label mb-2">התקדמות:</div>
+                                <div class="progress mb-2">
+                                    {% if task.status == 'pending' %}
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 33%;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% elif task.status == 'in_progress' %}
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 66%;" aria-valuenow="66" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% elif task.status == 'completed' %}
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    {% endif %}
+                                </div>
+                                <div class="small text-end text-muted">
+                                    {% if task.status == 'pending' %}
+                                        ממתין (33%)
+                                    {% elif task.status == 'in_progress' %}
+                                        בעבודה (66%)
+                                    {% elif task.status == 'completed' %}
+                                        הושלם (100%)
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if task.created_at and task.completed_at %}
+                            <div class="stat-row">
+                                <span class="stat-label">זמן לסיום:</span>
+                                <span class="badge bg-light text-dark border">
+                                    {% set completion_days = (task.completed_at - task.created_at).days %}
+                                    {% if completion_days == 0 %}
+                                        אותו יום
+                                    {% elif completion_days == 1 %}
+                                        יום אחד
+                                    {% else %}
+                                        {{ completion_days }} ימים
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">נוצר לפני:</span>
+                                <span class="badge bg-light text-dark border">
+                                    {% set days_since = (now - task.created_at).days if now is defined else 0 %}
+                                    {% if days_since == 0 %}
+                                        היום
+                                    {% elif days_since == 1 %}
+                                        אתמול
+                                    {% else %}
+                                        {{ days_since }} ימים
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            {% if task.comments %}
+                            <div class="stat-row">
+                                <span class="stat-label">תגובות:</span>
+                                <span class="badge bg-primary">{{ task.comments|length }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Project Info Card -->
+                    <div class="related-info-card">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="fas fa-building me-2 text-primary"></i>
+                            <h5 class="fw-bold">פרטי הפרויקט</h5>
+                        </div>
+                        <div class="card-body">
+                            <h6><a href="/projects/{{ project._id }}" class="project-link">{{ project.name }}</a></h6>
+                            <p class="text-muted small mb-2">{{ project.description|truncate(60) }}</p>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">סטטוס:</span>
+                                <span>
+                                    {% if project.status == 'planning' %}
+                                    <span class="badge bg-info">בתכנון</span>
+                                    {% elif project.status == 'in_progress' %}
+                                    <span class="badge bg-primary">בביצוע</span>
+                                    {% elif project.status == 'completed' %}
+                                    <span class="badge bg-success">הושלם</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ project.status }}</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">בעלים:</span>
+                                <span>{{ project.owner }}</span>
+                            </div>
+                            
+                            <div class="stat-row">
+                                <span class="stat-label">משתמשים:</span>
+                                <span>{{ project.members|length + 1 }}</span>
+                            </div>
+                            
+                            <div class="mt-2">
+                                <a href="/projects/{{ project._id }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-arrow-left me-1"></i> חזרה לפרויקט
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Task Modal -->
+{% if can_edit %}
+<div class="modal fade" id="deleteTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    מחיקת משימה
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                    <h5>האם אתה בטוח שברצונך למחוק את המשימה?</h5>
+                    <p class="text-muted">"{{ task.title }}"</p>
+                    <p class="small text-danger">פעולה זו אינה ניתנת לביטול.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> ביטול
+                </button>
+                <form action="/tasks/{{ task._id }}/delete" method="post">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i> מחק משימה
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    // Add a 'now' variable for date calculations
+    const now = new Date();
+</script>
+{% endblock %} 

@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    .register-container {
+        max-width: 500px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+        border-top: 3px solid var(--primary-color);
+    }
+    
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .register-header h2 {
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .register-header p {
+        color: var(--text-light);
+    }
+    
+    .error-message {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group .input-with-icon {
+        position: relative;
+    }
+    
+    .form-group .input-with-icon i {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-light);
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 1rem;
+        padding-right: 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .password-strength {
+        height: 5px;
+        background-color: #e5e7eb;
+        border-radius: 3px;
+        margin-top: 0.5rem;
+        overflow: hidden;
+    }
+    
+    .password-strength-bar {
+        height: 100%;
+        width: 0;
+        border-radius: 3px;
+        transition: all 0.3s;
+    }
+    
+    .password-requirements {
+        background-color: rgba(59, 130, 246, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        color: var(--text-light);
+        border-right: 3px solid var(--primary-color);
+    }
+    
+    .password-requirements h4 {
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .password-requirements ul {
+        margin: 0;
+        padding-right: 1.5rem;
+        list-style-type: none;
+    }
+    
+    .password-requirements ul li {
+        margin-bottom: 0.25rem;
+        position: relative;
+        padding-right: 1.25rem;
+    }
+    
+    .password-requirements ul li::before {
+        content: "•";
+        position: absolute;
+        right: 0;
+        color: var(--primary-color);
+    }
+    
+    .btn-register {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-register:hover {
+        background-color: var(--primary-dark);
+    }
+    
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: var(--text-light);
+    }
+    
+    .login-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-header">
+        <h2>צור חשבון</h2>
+        <p>הצטרף לפלטפורמת ניהול הפרויקטים שלנו</p>
+    </div>
+    
+    {% if error %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        <div class="form-group">
+            <label for="username">שם משתמש</label>
+            <div class="input-with-icon">
+                <input type="text" id="username" name="username" required autocomplete="username">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">סיסמה</label>
+            <div class="input-with-icon">
+                <input type="password" id="password" name="password" required autocomplete="new-password">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="password-strength">
+                <div class="password-strength-bar" id="strength-bar"></div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="confirm_password">אימות סיסמה</label>
+            <div class="input-with-icon">
+                <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password">
+                <i class="fas fa-lock"></i>
+            </div>
+        </div>
+        
+        <div class="password-requirements">
+            <h4><i class="fas fa-shield-alt"></i> דרישות סיסמה</h4>
+            <ul>
+                <li id="req-length" class="req">לפחות 8 תווים</li>
+                <li id="req-upper" class="req">לפחות אות גדולה אחת</li>
+                <li id="req-lower" class="req">לפחות אות קטנה אחת</li>
+                <li id="req-number" class="req">לפחות ספרה אחת</li>
+                <li id="req-special" class="req">לפחות תו מיוחד אחד</li>
+            </ul>
+        </div>
+        
+        <button type="submit" class="btn-register">
+            <i class="fas fa-user-plus"></i> צור חשבון
+        </button>
+    </form>
+    
+    <div class="login-link">
+        כבר יש לך חשבון? <a href="/login">התחבר כאן</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const strengthBar = document.getElementById('strength-bar');
+        const reqLength = document.getElementById('req-length');
+        const reqUpper = document.getElementById('req-upper');
+        const reqLower = document.getElementById('req-lower');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+        
+        function checkPasswordStrength(password) {
+            // Check length
+            if (password.length >= 8) {
+                reqLength.style.color = 'var(--primary-color)';
+                reqLength.innerHTML = '✓ לפחות 8 תווים';
+            } else {
+                reqLength.style.color = 'var(--text-light)';
+                reqLength.innerHTML = 'לפחות 8 תווים';
+            }
+            
+            // Check uppercase
+            if (/[A-Z]/.test(password)) {
+                reqUpper.style.color = 'var(--primary-color)';
+                reqUpper.innerHTML = '✓ לפחות אות גדולה אחת';
+            } else {
+                reqUpper.style.color = 'var(--text-light)';
+                reqUpper.innerHTML = 'לפחות אות גדולה אחת';
+            }
+            
+            // Check lowercase
+            if (/[a-z]/.test(password)) {
+                reqLower.style.color = 'var(--primary-color)';
+                reqLower.innerHTML = '✓ לפחות אות קטנה אחת';
+            } else {
+                reqLower.style.color = 'var(--text-light)';
+                reqLower.innerHTML = 'לפחות אות קטנה אחת';
+            }
+            
+            // Check number
+            if (/[0-9]/.test(password)) {
+                reqNumber.style.color = 'var(--primary-color)';
+                reqNumber.innerHTML = '✓ לפחות ספרה אחת';
+            } else {
+                reqNumber.style.color = 'var(--text-light)';
+                reqNumber.innerHTML = 'לפחות ספרה אחת';
+            }
+            
+            // Check special character
+            if (/[^A-Za-z0-9]/.test(password)) {
+                reqSpecial.style.color = 'var(--primary-color)';
+                reqSpecial.innerHTML = '✓ לפחות תו מיוחד אחד';
+            } else {
+                reqSpecial.style.color = 'var(--text-light)';
+                reqSpecial.innerHTML = 'לפחות תו מיוחד אחד';
+            }
+            
+            // Calculate strength
+            let strength = 0;
+            if (password.length >= 8) strength += 20;
+            if (/[A-Z]/.test(password)) strength += 20;
+            if (/[a-z]/.test(password)) strength += 20;
+            if (/[0-9]/.test(password)) strength += 20;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+            
+            // Update strength bar
+            strengthBar.style.width = strength + '%';
+            
+            // Color the strength bar based on strength
+            if (strength <= 40) {
+                strengthBar.style.backgroundColor = '#ef4444'; // Red
+            } else if (strength <= 80) {
+                strengthBar.style.backgroundColor = '#f59e0b'; // Yellow/Orange
+            } else {
+                strengthBar.style.backgroundColor = '#10b981'; // Green
+            }
+        }
+        
+        // Check if passwords match
+        function checkPasswordsMatch() {
+            if (confirmPasswordInput.value === passwordInput.value) {
+                confirmPasswordInput.style.borderColor = '#10b981';
+            } else {
+                confirmPasswordInput.style.borderColor = '#ef4444';
+            }
+        }
+        
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+                if (confirmPasswordInput.value) {
+                    checkPasswordsMatch();
+                }
+            });
+        }
+        
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('input', checkPasswordsMatch);
+        }
+    });
+</script>
+{% endblock %} 

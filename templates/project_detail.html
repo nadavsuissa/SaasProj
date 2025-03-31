@@ -1,0 +1,3449 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    /* Chat styles */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 70vh;
+        background-color: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        direction: rtl;
+    }
+
+    .chat-header {
+        padding: 15px 20px;
+        background: linear-gradient(195deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        border-bottom: 1px solid #eaeaea;
+        display: flex;
+        align-items: center;
+    }
+
+    .chat-header i {
+        margin-left: 10px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        scrollbar-width: thin;
+        scrollbar-color: #ddd #f9f9f9;
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: #f9f9f9;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background-color: #ddd;
+        border-radius: 10px;
+        border: 2px solid #f9f9f9;
+    }
+
+    .message {
+        max-width: 80%;
+        margin-bottom: 15px;
+        padding: 12px 15px;
+        border-radius: 18px;
+        position: relative;
+        animation: fadeIn 0.3s;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-user {
+        margin-left: auto;
+        background-color: #e1f5fe;
+        color: #333;
+        border-bottom-right-radius: 5px;
+        text-align: right;
+    }
+
+    .message-ai {
+        margin-right: auto;
+        background-color: #f0f0f0;
+        color: #333;
+        border-bottom-left-radius: 5px;
+        text-align: right;
+    }
+
+    .message-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .message-text {
+        flex: 1;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    /* Enhanced message text styling */
+    .message-text p {
+        margin-bottom: 12px;
+    }
+    
+    .message-text p:last-child {
+        margin-bottom: 0;
+    }
+    
+    .message-text h3 {
+        font-size: 17px;
+        font-weight: 600;
+        margin: 16px 0 8px;
+        color: #1a202c;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        padding-bottom: 6px;
+    }
+    
+    .message-text h3:first-child {
+        margin-top: 0;
+    }
+    
+    .message-text ul, .message-text ol {
+        padding-right: 20px;
+        margin: 10px 0;
+    }
+    
+    .message-text li {
+        margin-bottom: 8px;
+    }
+    
+    .message-text strong, .message-text b {
+        color: #1a202c;
+    }
+    
+    .message-text .highlight {
+        background-color: rgba(59, 130, 246, 0.1);
+        padding: 2px 5px;
+        border-radius: 4px;
+        color: #1e40af;
+        font-weight: 500;
+    }
+    
+    .message-text .section {
+        border-right: 3px solid var(--primary-color);
+        padding-right: 10px;
+        margin: 16px 0;
+    }
+    
+    .message-text .data-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px dashed rgba(0,0,0,0.07);
+    }
+    
+    .message-text .data-row .label {
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .message-text .data-row .value {
+        color: #1a202c;
+    }
+
+    .message-user .message-content {
+        flex-direction: row-reverse;
+    }
+
+    .user-icon, .ai-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .user-icon {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .ai-icon {
+        background-color: #673ab7;
+        color: white;
+    }
+
+    .chat-input {
+        display: flex;
+        padding: 15px;
+        background-color: white;
+        border-top: 1px solid #eaeaea;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        outline: none;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+        text-align: right;
+    }
+
+    .chat-input input:focus {
+        border-color: var(--primary-color);
+    }
+
+    .chat-input button {
+        margin-right: 10px;
+        padding: 10px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .chat-input button:hover {
+        background-color: var(--primary-dark);
+    }
+
+    .chat-input button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        background-color: #f0f0f0;
+        border-radius: 18px;
+        margin-bottom: 15px;
+        max-width: fit-content;
+    }
+
+    .typing-indicator .processing-text {
+        display: inline-block;
+        margin-right: 5px;
+        white-space: nowrap;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .typing-indicator .dots {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .typing-indicator .dots span {
+        height: 6px;
+        width: 6px;
+        margin: 0 2px;
+        background-color: #999;
+        border-radius: 50%;
+        display: inline-block;
+        animation: typing 1s infinite;
+    }
+
+    .typing-indicator .dots span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-indicator .dots span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0); }
+    }
+
+    /* File upload styles */
+    .upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .upload-area:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(59, 130, 246, 0.05);
+    }
+
+    .file-card {
+        transition: all 0.3s;
+    }
+
+    .file-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Tab styles */
+    .nav-tabs .nav-link {
+        color: #666;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    #connection-status {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        text-align: center;
+        display: none;
+        background-color: rgba(0,0,0,0.05);
+        color: #666;
+    }
+
+    /* Make sure code blocks in chat display correctly */
+    .message-text pre {
+        direction: ltr;
+        text-align: left;
+        background: rgba(0,0,0,0.05);
+        padding: 10px;
+        border-radius: 6px;
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        font-family: monospace;
+        font-size: 14px;
+    }
+
+    .message-text code {
+        direction: ltr;
+        display: inline-block;
+        background: rgba(0,0,0,0.05);
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 90%;
+    }
+
+    /* Format list elements properly */
+    .message-text ul, .message-text ol {
+        padding-right: 20px;
+        margin: 10px 0;
+    }
+
+    .message-text li {
+        margin-bottom: 5px;
+    }
+
+    /* Table formatting */
+    .message-text table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        direction: rtl;
+    }
+
+    .message-text table th, .message-text table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: right;
+    }
+
+    .message-text table th {
+        background-color: rgba(0,0,0,0.05);
+        font-weight: bold;
+    }
+
+    /* Overview section styles */
+    .overview-description-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: none;
+    }
+    
+    .overview-section-title {
+        font-weight: 600;
+        color: #2d3748;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .project-description-text {
+        color: #4a5568;
+        line-height: 1.7;
+        font-size: 1.05rem;
+    }
+    
+    .overview-data-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: none;
+        background: linear-gradient(to bottom, #ffffff, #f9fafb);
+    }
+    
+    .overview-item {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        height: 100%;
+        transition: all 0.2s;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .overview-item:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px);
+    }
+    
+    .overview-item h6 {
+        color: #3182ce;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        font-size: 1.05rem;
+    }
+    
+    .overview-item p {
+        margin-bottom: 0;
+        font-size: 1.1rem;
+        color: #4a5568;
+    }
+    
+    .overview-card-plans, .overview-card-meetings {
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: none;
+        transition: all 0.3s;
+    }
+    
+    .overview-card-plans:hover, .overview-card-meetings:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+    }
+    
+    .overview-card-plans .card-header, .overview-card-meetings .card-header {
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        padding: 1rem 1.5rem;
+    }
+    
+    .overview-card-plans .card-header h6, .overview-card-meetings .card-header h6 {
+        font-weight: 600;
+        color: #2d3748;
+    }
+    
+    .list-group-item {
+        padding: 1rem 1.25rem;
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    #refresh-overview {
+        border-radius: 8px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    #refresh-overview:hover {
+        box-shadow: 0 4px 10px rgba(66, 153, 225, 0.15);
+    }
+    
+    #refresh-overview i {
+        transition: transform 0.5s ease;
+    }
+    
+    #refresh-overview:hover i {
+        transform: rotate(180deg);
+    }
+
+    #last-updated {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .time-ago {
+        color: #9ca3af;
+        font-size: 0.8rem;
+        font-style: italic;
+        margin-right: 0.25rem;
+    }
+
+    .updated-info {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    #chatContainer {
+        height: 80vh;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 1rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+    }
+
+    .message {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .user-message {
+        background-color: #e6f7ff;
+        text-align: left;
+    }
+
+    .assistant-message {
+        background-color: #ffffff;
+        border: 1px solid #e3e3e3;
+    }
+
+    .message-content {
+        white-space: pre-line;
+    }
+
+    .message-content p {
+        margin-bottom: 0.5rem;
+    }
+    
+    .message-content h3 {
+        font-size: 1.1rem;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+    
+    .message-content ol, .message-content ul {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .message-content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .highlight {
+        color: #0066cc;
+        font-weight: bold;
+    }
+    
+    /* New style for farewell message */
+    .message-farewell {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #e3e3e3;
+        color: #666;
+        font-style: italic;
+        direction: rtl;
+        text-align: start;
+    }
+    
+    /* Typing indicator styles */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .typing-indicator span {
+        height: 10px;
+        width: 10px;
+        border-radius: 50%;
+        background-color: #3498db;
+        display: inline-block;
+        margin: 0 2px;
+        opacity: 0.6;
+        animation: typing 1s infinite ease-in-out;
+    }
+    
+    .typing-indicator span:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+    
+    .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+    
+    @keyframes typing {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-5px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    /* Styles for JSON data presentation */
+    .data-section {
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .data-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px dashed rgba(0,0,0,0.1);
+        direction: rtl;
+    }
+    
+    .data-row:last-child {
+        border-bottom: none;
+    }
+    
+    .data-row .key {
+        font-weight: 600;
+        color: #495057;
+        margin-left: 1rem;
+    }
+    
+    .data-row .value {
+        color: #212529;
+    }
+    
+    /* Additional styles for nested JSON structures */
+    .message-content h3 {
+        margin-top: 1.5rem;
+        color: #3273dc;
+        font-size: 1.1rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+        direction: rtl;
+    }
+    
+    .message-content h3:first-child {
+        margin-top: 0;
+    }
+    
+    .message-content ul {
+        padding-right: 1.5rem;
+        margin: 0.75rem 0;
+        list-style-position: outside;
+        direction: rtl;
+    }
+    
+    .message-content li {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+    }
+</style>
+<!-- Add Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8 col-md-7">
+        <h2>{{ project.name }}</h2>
+        <p class="text-muted">
+            <i class="fas fa-tag me-1"></i> {{ project.type }} &bull;
+            <i class="fas fa-user me-1"></i> {{ project.owner }} &bull;
+            <i class="fas fa-calendar-alt me-1"></i> {{ project.created_at }}
+        </p>
+        <div class="project-status-container mt-3">
+            <span class="me-2">סטטוס:</span>
+            <div class="btn-group status-selector" role="group">
+                {% if project.owner == user.username %}
+                    <select id="status-dropdown" class="form-select form-select-sm status-select" style="min-width: 120px;">
+                        <option value="planning" {% if project.status == 'planning' %}selected{% endif %}>בתכנון</option>
+                        <option value="in_progress" {% if project.status == 'in_progress' %}selected{% endif %}>בביצוע</option>
+                        <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>גמור</option>
+                    </select>
+                {% else %}
+                    <span class="status-badge status-{{ project.status }}">
+                        {% if project.status == 'planning' %}
+                            <i class="fas fa-pencil-ruler me-1"></i> בתכנון
+                        {% elif project.status == 'in_progress' %}
+                            <i class="fas fa-hammer me-1"></i> בביצוע
+                        {% else %}
+                            <i class="fas fa-check-circle me-1"></i> גמור
+                        {% endif %}
+                    </span>
+                    <small class="text-muted ms-2">(רק בעל הפרויקט יכול לשנות סטטוס)</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-5 text-end">
+        <a href="/myprojects" class="btn btn-secondary">חזרה לפרויקטים</a>
+        {% if project.owner == user.username %}
+        <a href="/projects/{{ project._id }}/members" class="btn btn-primary">
+            <i class="fas fa-users me-1"></i> ניהול משתמשים
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">
+                    <i class="fas fa-info-circle me-1"></i> סקירה
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#chat" role="tab">
+                    <i class="fas fa-comments me-1"></i> צ'אט AI
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tasks" role="tab">
+                    <i class="fas fa-tasks me-1"></i> משימות
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#files" role="tab">
+                    <i class="fas fa-file me-1"></i> קבצים
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#graphs" role="tab">
+                    <i class="fas fa-chart-bar me-1"></i> מידע גרפי
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/projects/{{ project._id }}/members">
+                    <i class="fas fa-users me-1"></i> משתמשים
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card mb-4 overview-description-card">
+                            <div class="card-body">
+                                <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i> תיאור הפרויקט</h5>
+                                <p class="project-description-text">{{ project.description }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Project overview section from AI assistant -->
+                        <div class="mt-5" id="project-overview-section">
+                            <h5 class="mb-4 overview-section-title"><i class="fas fa-robot me-2"></i> סקירת פרויקט <small class="text-muted">(מידע מהעוזר המלאכותי)</small></h5>
+                            
+                            <div id="overview-loading" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">טוען...</span>
+                                </div>
+                                <p class="mt-3 text-muted">טוען מידע פרויקט...</p>
+                            </div>
+                            
+                            <div id="overview-error" class="alert alert-danger" style="display: none;">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <span id="error-message">שגיאה בטעינת נתוני הפרויקט.</span>
+                            </div>
+                            
+                            <div id="overview-content" style="display: none;">
+                                <div class="card mb-4 overview-data-card">
+                                    <div class="card-body">
+                                        <div class="row g-4">
+                                            <div class="col-md-6">
+                                                <div class="overview-item">
+                                                    <h6><i class="fas fa-hard-hat me-2"></i> קבלן מבצע</h6>
+                                                    <p id="overview-contractor">טוען...</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="overview-item">
+                                                    <h6><i class="fas fa-coins me-2"></i> תקציב</h6>
+                                                    <p id="overview-budget">טוען...</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="overview-item">
+                                                    <h6><i class="fas fa-calendar-check me-2"></i> צפי לסיום</h6>
+                                                    <p id="overview-completion">טוען...</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="overview-item">
+                                                    <h6><i class="fas fa-info-circle me-2"></i> סטטוס אחרון</h6>
+                                                    <p id="overview-status">טוען...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-4 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card h-100 overview-card-plans">
+                                            <div class="card-header bg-light">
+                                                <h6 class="m-0"><i class="fas fa-tasks me-2"></i> תוכניות להמשך</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush" id="overview-plans">
+                                                    <li class="list-group-item text-center text-muted">טוען...</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card h-100 overview-card-meetings">
+                                            <div class="card-header bg-light">
+                                                <h6 class="m-0"><i class="fas fa-calendar me-2"></i> פגישות קרובות</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <ul class="list-group list-group-flush" id="overview-meetings">
+                                                    <li class="list-group-item text-center text-muted">טוען...</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end mt-4">
+                                    <button id="refresh-overview" class="btn btn-outline-primary">
+                                        <i class="fas fa-sync-alt me-1"></i> רענן נתונים
+                                    </button>
+                                    <small class="text-muted me-2" id="last-updated"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Tab -->
+            <div class="tab-pane fade" id="chat" role="tabpanel">
+        <div class="chat-container">
+            <div class="chat-header">
+                        <i class="fas fa-robot me-2"></i>
+                        <span>עוזר בנייה מלאכותי</span>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                {% for message in chat_history %}
+                <div class="message {% if message.is_ai %}message-ai{% else %}message-user{% endif %}">
+                    <div class="message-content">
+                        {% if message.is_ai %}
+                        <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                        <div class="message-text">{{ message.message|safe }}</div>
+                        {% else %}
+                        <div class="message-text">{{ message.message|safe }}</div>
+                        <div class="user-icon"><i class="fas fa-user"></i></div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="שאל את העוזר המלאכותי לגבי פרויקט הבנייה שלך...">
+                <button id="send-button">
+                            <i class="fas fa-paper-plane me-1"></i> שלח
+                </button>
+            </div>
+            
+                    <div id="connection-status" class="text-muted">
+                        מתחבר לשרת צ'אט...
+            </div>
+        </div>
+    </div>
+
+            <!-- Add Tasks Tab -->
+            <div class="tab-pane fade" id="tasks" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-tasks me-2"></i> משימות הפרויקט</h5>
+                            <button class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                                <i class="fas fa-plus me-1"></i> משימה חדשה
+                            </button>
+                        </div>
+                        
+                        <!-- Task Filter Controls -->
+                        <div class="card mb-3">
+                            <div class="card-body p-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-3 mb-2 mb-md-0">
+                                        <select id="task-status-filter" class="form-select form-select-sm">
+                                            <option value="all" selected>כל הסטטוסים</option>
+                                            <option value="pending">ממתין</option>
+                                            <option value="in_progress">בעבודה</option>
+                                            <option value="completed">הושלם</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2 mb-md-0">
+                                        <select id="task-priority-filter" class="form-select form-select-sm">
+                                            <option value="all" selected>כל העדיפויות</option>
+                                            <option value="high">גבוהה</option>
+                                            <option value="medium">בינונית</option>
+                                            <option value="low">נמוכה</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2 mb-md-0">
+                                        <select id="task-assignee-filter" class="form-select form-select-sm">
+                                            <option value="all" selected>כל המשתמשים</option>
+                                            <option value="{{ project.owner }}">{{ project.owner }} (בעלים)</option>
+                                            {% for member in project.members %}
+                                            <option value="{{ member }}">{{ member }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <button id="reset-task-filters" class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-sync-alt me-1"></i> איפוס סינון
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tasks List -->
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table id="tasks-table" class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th scope="col" class="sortable" data-sort="title">כותרת</th>
+                                                <th scope="col" class="sortable" data-sort="status">סטטוס</th>
+                                                <th scope="col" class="sortable" data-sort="priority">עדיפות</th>
+                                                <th scope="col" class="sortable" data-sort="assigned_to">משוייך ל</th>
+                                                <th scope="col" class="sortable" data-sort="creator">נוצר ע"י</th>
+                                                <th scope="col" class="sortable" data-sort="due_date">תאריך יעד</th>
+                                                <th scope="col">פעולות</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% if project_tasks and project_tasks|length > 0 %}
+                                                {% for task in project_tasks %}
+                                                <tr class="task-row" data-task-id="{{ task._id }}" 
+                                                    data-status="{{ task.status }}" 
+                                                    data-priority="{{ task.priority }}"
+                                                    data-assignee="{{ task.assigned_to }}">
+                                                    <td>
+                                                        <a href="/tasks/{{ task._id }}" class="fw-semi-bold text-decoration-none task-title-link">
+                                                            {{ task.title }}
+                                                            {% if not task.is_read and user.username == task.assigned_to %}
+                                                            <span class="badge bg-danger rounded-pill ms-2">חדש</span>
+                                                            {% endif %}
+                                                        </a>
+                                                        <div class="text-muted small text-truncate" style="max-width: 250px;">
+                                                            {{ task.description|truncate(50) }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {% if task.status == 'pending' %}
+                                                        <span class="badge bg-warning text-dark rounded-pill">ממתין</span>
+                                                        {% elif task.status == 'in_progress' %}
+                                                        <span class="badge bg-primary rounded-pill">בעבודה</span>
+                                                        {% elif task.status == 'completed' %}
+                                                        <span class="badge bg-success rounded-pill">הושלם</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary rounded-pill">{{ task.status }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if task.priority == 'high' %}
+                                                        <span class="badge bg-danger rounded-pill">גבוהה</span>
+                                                        {% elif task.priority == 'medium' %}
+                                                        <span class="badge bg-info rounded-pill">בינונית</span>
+                                                        {% elif task.priority == 'low' %}
+                                                        <span class="badge bg-secondary rounded-pill">נמוכה</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary rounded-pill">{{ task.priority }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="avatar-initials me-1" title="{{ task.assigned_to }}">
+                                                                {{ task.assigned_to[:1].upper() }}
+                                                            </span>
+                                                            {{ task.assigned_to }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="avatar-initials me-1" title="{{ task.creator|default(project.owner) }}">
+                                                                {{ (task.creator|default(project.owner))[:1].upper() }}
+                                                            </span>
+                                                            {{ task.creator|default(project.owner) }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {% if task.due_date %}
+                                                            {% set days_left = (task.due_date - now).days if now is defined else 0 %}
+                                                            <div class="d-flex align-items-center">
+                                                                <i class="far fa-calendar-alt me-1 
+                                                                    {% if days_left < 0 %}text-danger
+                                                                    {% elif days_left < 3 %}text-warning
+                                                                    {% else %}text-muted{% endif %}">
+                                                                </i>
+                                                                <span class="{% if days_left < 0 %}text-danger fw-bold
+                                                                    {% elif days_left < 3 %}text-warning fw-bold{% endif %}">
+                                                                    {{ task.due_date.strftime('%d/%m/%Y') }}
+                                                                </span>
+                                                            </div>
+                                                        {% else %}
+                                                        <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="btn-group">
+                                                            <a href="/tasks/{{ task._id }}" class="btn btn-sm btn-outline-primary">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            {% if task.status != 'completed' and user.username == task.assigned_to %}
+                                                            <form action="/tasks/{{ task._id }}/update" method="post" class="d-inline">
+                                                                <input type="hidden" name="status" value="completed">
+                                                                <button type="submit" class="btn btn-sm btn-outline-success" title="סמן כהושלם">
+                                                                    <i class="fas fa-check"></i>
+                                                                </button>
+                                                            </form>
+                                                            {% endif %}
+                                                            {% if user.username == task.creator|default(project.owner) or user.username == project.owner %}
+                                                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal-{{ task._id }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                            {% endif %}
+                                                        </div>
+                                                        
+                                                        <!-- Delete Task Modal -->
+                                                        <div class="modal fade" id="deleteTaskModal-{{ task._id }}" tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title">מחיקת משימה</h5>
+                                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <div class="text-center mb-3">
+                                                                            <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                                                                            <h5>האם אתה בטוח שברצונך למחוק את המשימה?</h5>
+                                                                            <p class="text-muted">"{{ task.title }}"</p>
+                                                                            <p class="small text-danger">פעולה זו אינה ניתנת לביטול.</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
+                                                                        <form action="/tasks/{{ task._id }}/delete" method="post">
+                                                                            <button type="submit" class="btn btn-danger">
+                                                                                <i class="fas fa-trash me-1"></i> מחק משימה
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4">
+                                                        <div class="py-5">
+                                                            <i class="fas fa-tasks text-muted fa-3x mb-3"></i>
+                                                            <p class="text-muted mb-0">אין משימות בפרויקט זה</p>
+                                                            <button class="btn btn-sm btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                                                                <i class="fas fa-plus me-1"></i> צור משימה חדשה
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Tab -->
+            <div class="tab-pane fade" id="files" role="tabpanel">
+                <div class="upload-area mb-4" id="upload-area">
+                    <input type="file" id="file-input" class="d-none">
+                    <label for="file-input" class="mb-0">
+                        <div class="text-center">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                            <h5 class="mt-2">גרור קובץ לכאן או לחץ לבחירת קובץ</h5>
+                            <p class="text-muted mb-0">התמיכה בקבצים: PDF, DOCX, XLSX, JPG, PNG</p>
+            </div>
+                    </label>
+            </div>
+            
+                <div class="progress mb-3 d-none" id="upload-progress">
+                    <div class="progress-bar bg-success" role="progressbar" id="upload-progress-bar" style="width: 0%"></div>
+            </div>
+                <div id="upload-status" class="text-center mb-3 d-none"></div>
+                
+                <button id="upload-btn" class="btn btn-primary mb-4 d-none">
+                    <i class="fas fa-upload me-1"></i> העלה קובץ
+                </button>
+                
+                <div class="row" id="files-list">
+                {% if project.files and project.files|length > 0 %}
+                    {% for file in project.files %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card file-card h-100" data-file-id="{{ file.file_id }}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                            {% if file.file_type.startswith('image/') %}
+                                            <i class="fas fa-file-image text-warning me-2 fa-lg"></i>
+                            {% elif file.file_type.startswith('application/pdf') %}
+                                            <i class="fas fa-file-pdf text-danger me-2 fa-lg"></i>
+                            {% elif file.file_type.startswith('text/') %}
+                                            <i class="fas fa-file-alt text-primary me-2 fa-lg"></i>
+                            {% elif file.file_type.startswith('application/msword') or file.file_type.startswith('application/vnd.openxmlformats-officedocument.wordprocessingml') %}
+                                            <i class="fas fa-file-word text-info me-2 fa-lg"></i>
+                            {% elif file.file_type.startswith('application/vnd.ms-excel') or file.file_type.startswith('application/vnd.openxmlformats-officedocument.spreadsheetml') %}
+                                            <i class="fas fa-file-excel text-success me-2 fa-lg"></i>
+                            {% elif file.file_type.startswith('application/vnd.ms-powerpoint') or file.file_type.startswith('application/vnd.openxmlformats-officedocument.presentationml') %}
+                                            <i class="fas fa-file-powerpoint text-warning me-2 fa-lg"></i>
+                            {% else %}
+                                            <i class="fas fa-file text-secondary me-2 fa-lg"></i>
+                            {% endif %}
+                                        <h6 class="mb-0 text-truncate" title="{{ file.file_name }}">{{ file.file_name }}</h6>
+                        </div>
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        הועלה: {{ file.uploaded_at }}
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-light p-2">
+                                    <button class="btn btn-sm btn-danger file-delete-btn w-100" data-file-id="{{ file.file_id }}">
+                                        <i class="fas fa-trash me-1"></i> מחק
+                                    </button>
+                                </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-folder-open fa-4x text-muted"></i>
+                            <h5 class="mt-3">אין קבצים עדיין</h5>
+                            <p class="text-muted">העלה מסמכים כדי לעזור לעוזר המלאכותי לענות על השאלות שלך.</p>
+                    </div>
+                {% endif %}
+                </div>
+            </div>
+
+            <!-- Graphical Information Tab -->
+            <div class="tab-pane fade" id="graphs" role="tabpanel">
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="m-0"><i class="fas fa-chart-bar me-2"></i> מידע גרפי על הפרויקט</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="graphs-loading" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">טוען...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">טוען נתונים גרפיים...</p>
+                                </div>
+                                
+                                <div id="graphs-error" class="alert alert-danger" style="display: none;">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    <span id="graphs-error-message">שגיאה בטעינת הנתונים הגרפיים.</span>
+                                </div>
+                                
+                                <div id="graphs-content" style="display: none;">
+                                    <div class="row">
+                                        <!-- Budget Distribution Pie Chart -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card">
+                                                <div class="card-header bg-white py-3">
+                                                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i> התפלגות תקציב</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <canvas id="budget-chart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Timeline Progress Chart -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card">
+                                                <div class="card-header bg-white py-3">
+                                                    <h6 class="mb-0"><i class="fas fa-tasks me-2"></i> התקדמות לאורך זמן</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <canvas id="progress-chart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <!-- Task Status -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card">
+                                                <div class="card-header bg-white py-3">
+                                                    <h6 class="mb-0"><i class="fas fa-list-check me-2"></i> סטטוס משימות</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <canvas id="tasks-chart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Completion Forecast -->
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card">
+                                                <div class="card-header bg-white py-3">
+                                                    <h6 class="mb-0"><i class="fas fa-calendar-check me-2"></i> תחזית סיום</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <canvas id="forecast-chart" height="250"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-end mt-2">
+                                        <button id="refresh-graphs" class="btn btn-outline-primary">
+                                            <i class="fas fa-sync-alt me-1"></i> רענן נתונים
+                                        </button>
+                                        <small class="text-muted me-2" id="graphs-last-updated"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bootstrap tabs integration
+        document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                const targetTab = e.target.getAttribute('href').substring(1);
+                
+                // Load overview data when overview tab is activated
+                if (targetTab === 'overview') {
+                    // Close WebSocket if it's open to prevent conflicts
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        console.log('Closing WebSocket when switching to overview tab');
+                        ws.close();
+                    }
+                    // Load overview data using cache when possible
+                    loadProjectOverview(false); // false = don't force refresh
+                }
+                
+                // Load graph data when graphs tab is activated
+                if (targetTab === 'graphs') {
+                    // Close WebSocket if it's open to prevent conflicts
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        console.log('Closing WebSocket when switching to graphs tab');
+                        ws.close();
+                    }
+                    // Load graph data using cache when possible
+                    loadProjectGraphData(false); // false = don't force refresh
+                }
+                
+                // Only connect WebSocket when chat tab is activated
+                if (targetTab === 'chat') {
+                    if (!ws || ws.readyState !== WebSocket.OPEN) {
+                        console.log('Connecting WebSocket for chat tab');
+                        connectWebSocket();
+                    }
+                } else {
+                    // Close WebSocket when switching to other tabs
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        console.log('Closing WebSocket when switching away from chat tab');
+                        ws.close();
+                    }
+                }
+            });
+        });
+        
+        // File upload UI
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadProgress = document.getElementById('upload-progress');
+        const uploadProgressBar = document.getElementById('upload-progress-bar');
+        const uploadStatus = document.getElementById('upload-status');
+        const uploadArea = document.getElementById('upload-area');
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    uploadBtn.classList.remove('d-none');
+                    uploadBtn.textContent = `העלה את "${this.files[0].name}"`;
+                } else {
+                    uploadBtn.classList.add('d-none');
+                }
+            });
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.borderColor = 'var(--primary-color)';
+                this.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'transparent';
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.borderColor = '#ddd';
+                this.style.backgroundColor = 'transparent';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    uploadBtn.classList.remove('d-none');
+                    uploadBtn.textContent = `העלה את "${e.dataTransfer.files[0].name}"`;
+                }
+            });
+        }
+        
+        // Upload button functionality
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', function() {
+                if (!fileInput.files.length) return;
+                
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Get the project ID from the URL
+                const pathParts = window.location.pathname.split('/');
+                const projectId = pathParts[pathParts.length - 1];
+                
+                // Show progress UI
+                uploadProgress.classList.remove('d-none');
+                uploadStatus.classList.remove('d-none');
+                uploadStatus.textContent = 'מעלה...';
+                uploadStatus.className = 'text-center mb-3';
+                uploadProgressBar.style.width = '0%';
+                uploadBtn.disabled = true;
+                
+                // Create and configure XHR
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', `/projects/${projectId}/upload`, true);
+                
+                // Track upload progress
+                xhr.upload.onprogress = function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        uploadProgressBar.style.width = percentComplete + '%';
+                    }
+                };
+                
+                // Handle response
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            uploadStatus.textContent = 'הקובץ הועלה בהצלחה!';
+                            uploadStatus.className = 'text-center mb-3 text-success';
+                            
+                            // Reload the page to show the new file
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                            
+                        } catch (e) {
+                            console.error('Error parsing response:', e);
+                            uploadStatus.textContent = 'שגיאה בהעלאת הקובץ: תגובה לא חוקית';
+                            uploadStatus.className = 'text-center mb-3 text-danger';
+                        }
+                    } else {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            uploadStatus.textContent = `שגיאה בהעלאת הקובץ: ${response.detail}`;
+                        } catch (e) {
+                            uploadStatus.textContent = `שגיאה בהעלאת הקובץ: שרת החזיר ${xhr.status}`;
+                        }
+                        uploadStatus.className = 'text-center mb-3 text-danger';
+                        uploadBtn.disabled = false;
+                    }
+                };
+                
+                // Handle network errors
+                xhr.onerror = function() {
+                    uploadStatus.textContent = 'אירעה שגיאת רשת במהלך ההעלאה';
+                    uploadStatus.className = 'text-center mb-3 text-danger';
+                    uploadBtn.disabled = false;
+                };
+                
+                // Send the form data
+                xhr.send(formData);
+            });
+        }
+        
+        // File delete functionality
+        document.querySelectorAll('.file-delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!confirm('האם אתה בטוח שברצונך למחוק קובץ זה? לא ניתן לבטל זאת.')) {
+                    return;
+                }
+                
+                const fileId = this.dataset.fileId;
+                const fileCard = this.closest('.col-md-4');
+                
+                // Get the project ID from the URL
+                const pathParts = window.location.pathname.split('/');
+                const projectId = pathParts[pathParts.length - 1];
+                
+                // Send delete request
+                fetch(`/projects/${projectId}/files/${fileId}`, {
+                    method: 'DELETE'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.detail || 'שגיאה במחיקת הקובץ');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remove the file card
+                    fileCard.remove();
+                    
+                    // Check if there are no files left
+                    if (document.querySelectorAll('.file-card').length === 0) {
+                        document.getElementById('files-list').innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <i class="fas fa-folder-open fa-4x text-muted"></i>
+                                <h5 class="mt-3">אין קבצים עדיין</h5>
+                                <p class="text-muted">העלה מסמכים כדי לעזור לעוזר המלאכותי לענות על השאלות שלך.</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    alert('שגיאה במחיקת הקובץ: ' + error.message);
+                });
+            });
+        });
+        
+        // Chat functionality
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const connectionStatus = document.getElementById('connection-status');
+        
+        let ws = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        
+        function connectWebSocket() {
+            // Show connection status
+            connectionStatus.style.display = 'block';
+            connectionStatus.textContent = 'מתחבר לשרת צ\'אט...';
+            
+            // Get the project ID from the URL
+            const pathParts = window.location.pathname.split('/');
+            const projectId = pathParts[pathParts.length - 1];
+            
+            // Check if we're on the chat tab before connecting
+            if (!document.querySelector('.tab-pane.show.active#chat')) {
+                console.log('Not on chat tab, not connecting WebSocket');
+                connectionStatus.style.display = 'none';
+                return;
+            }
+            
+            // Close existing connection if any
+            if (ws) {
+                console.log('Closing existing WebSocket before creating new one');
+                ws.close();
+            }
+            
+            // WebSocket connection
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            try {
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/${projectId}`);
+            
+            sendButton.disabled = true;
+            
+            ws.onopen = function(event) {
+                console.log('WebSocket connection established');
+                    connectionStatus.textContent = 'מחובר';
+                setTimeout(() => {
+                    connectionStatus.style.display = 'none';
+                }, 2000);
+                sendButton.disabled = false;
+                reconnectAttempts = 0;
+            };
+            
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('WebSocket message received:', data);
+                        
+                    // If not on chat tab anymore, ignore messages
+                    if (!document.querySelector('.tab-pane.show.active#chat')) {
+                        console.log('Not on chat tab, ignoring WebSocket message');
+                        return;
+                    }
+                    
+                    // Log AI message content for debugging
+                    if (data.sender === "AI Assistant") {
+                        console.log('AI MESSAGE - Original content:', data.message);
+                        
+                        // Early detection of citation markers
+                        if (data.message.includes('citeturn') || data.message.includes('contentReference')) {
+                            console.log('AI MESSAGE - Citation markers detected, applying cleanup');
+                        }
+                    }
+                
+                    // Handle typing indicator
+                    if (data.is_typing) {
+                        // Only show typing indicator if we haven't shown a fallback message yet
+                        if (!document.getElementById('fallback-message')) {
+                            showTypingIndicator();
+                        }
+                        return;
+                    }
+                    
+                    // Remove typing indicator if showing
+                    removeTypingIndicator();
+                    
+                    // Skip empty messages or messages indicating no response
+                    if (!data.message || data.message.includes("לא התקבלה תשובה מהעוזר")) {
+                        return;
+                    }
+                    
+                    // Handle error messages
+                    if (data.is_error) {
+                        // Check if we have a fallback message to replace
+                        let messageElement = document.getElementById('fallback-message');
+                        
+                        // If no fallback message, check for last AI message or create a new one
+                        if (!messageElement) {
+                            messageElement = document.querySelector('.message-ai:last-child');
+                            if (!messageElement) {
+                                messageElement = document.createElement('div');
+                                messageElement.classList.add('message', 'message-ai');
+                                messageElement.innerHTML = `
+                                    <div class="message-content">
+                                        <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                                        <div class="message-text"></div>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(messageElement);
+                            }
+                        } else {
+                            // If using fallback, keep the ID to track it
+                            messageElement.id = ''; // Clear the fallback-message ID as we're replacing its content
+                        }
+                        
+                        // Update the message text
+                        const messageText = messageElement.querySelector('.message-text');
+                        
+                        // Process the message to remove citations
+                        const cleanedMessage = formatMessage(data.message);
+                        messageText.innerHTML = cleanedMessage;
+                        
+                        // Run citation cleanup after a short delay to catch any missed patterns
+                        setTimeout(cleanupExistingCitations, 50);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        return;
+                    }
+                    
+                    // Handle streaming messages
+                    if (data.is_streaming) {
+                        // Check if we have a fallback message to replace
+                        let messageElement = document.getElementById('fallback-message');
+                        
+                        // If no fallback message, check for existing streaming message or create new
+                        if (!messageElement) {
+                            messageElement = document.querySelector('.message-ai:last-child');
+                            if (!messageElement) {
+                                messageElement = document.createElement('div');
+                                messageElement.classList.add('message', 'message-ai');
+                                messageElement.innerHTML = `
+                                    <div class="message-content">
+                                        <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                                        <div class="message-text"></div>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(messageElement);
+                            }
+                        } else {
+                            // If using fallback, update its ID to track that we've replaced it
+                            messageElement.id = 'replaced-fallback';
+                            
+                            // Clear the fallback content before appending the real content
+                            const messageText = messageElement.querySelector('.message-text');
+                            messageText.innerHTML = '';
+                        }
+                        
+                        // Append the new chunk to the message
+                        const messageText = messageElement.querySelector('.message-text');
+                        
+                        // Format the message to handle citations
+                        const formattedChunk = formatMessage(data.message);
+                        
+                        // Append formatted content - but in streaming mode, just use the pre-processed content
+                        // without adding farewell message container again (which would duplicate)
+                        messageText.innerHTML = formattedChunk;
+                        
+                        // Run citation cleanup to ensure consistent formatting
+                        setTimeout(cleanupExistingCitations, 50);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        
+                        // As soon as we get streaming content, the system is responding, so we can allow new messages
+                        if (window.chatState) {
+                            window.chatState.isWaitingForResponse = false;
+                            console.log('Streaming content received, updated chat state:', window.chatState);
+                        }
+                        
+                        return;
+                    }
+                    
+                    // Handle regular messages
+                    if (data.sender === "AI Assistant") {
+                        // Check if we have a fallback message to replace
+                        let messageElement = document.getElementById('fallback-message');
+                        
+                        // If no fallback message, check for last AI message or create new
+                        if (!messageElement) {
+                            messageElement = document.querySelector('.message-ai:last-child');
+                            if (!messageElement) {
+                                messageElement = document.createElement('div');
+                                messageElement.classList.add('message', 'message-ai');
+                                messageElement.innerHTML = `
+                                    <div class="message-content">
+                                        <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                                        <div class="message-text"></div>
+                                    </div>
+                                `;
+                                chatMessages.appendChild(messageElement);
+                            }
+                        } else {
+                            // If using fallback, clear its ID as we're replacing it
+                            messageElement.id = '';
+                        }
+                        
+                        // Update the message text with formatted content
+                        const messageText = messageElement.querySelector('.message-text');
+                        
+                        // Apply citation cleaning
+                        const cleanedMessage = formatMessage(data.message);
+                        
+                        // Log the final message to be displayed
+                        console.log('AI MESSAGE - Final cleaned content:', cleanedMessage);
+                        
+                        messageText.innerHTML = cleanedMessage;
+                        
+                        // Run a final cleanup check after a short delay
+                        setTimeout(cleanupExistingCitations, 50);
+                        
+                        // Scroll to bottom
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                        
+                        // Reset chat state as we've received a complete message
+                        if (window.chatState) {
+                            window.chatState.isWaitingForResponse = false;
+                            window.chatState.lastMessageTimestamp = Date.now();
+                            console.log('Complete message received, updated chat state:', window.chatState);
+                        }
+                    } else {
+                        // Only add user messages from the server if they don't already exist
+                        // This prevents duplication when the server echoes back our own messages
+                        const existingUserMessages = Array.from(document.querySelectorAll('.message-user'));
+                        const isDuplicate = existingUserMessages.some(msg => 
+                            msg.querySelector('.message-text').textContent === data.message
+                        );
+                        
+                        if (!isDuplicate) {
+                            // Handle user messages
+                            addMessageToChat('user', data.message, data.timestamp);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error handling WebSocket message:', error);
+                    // Show error message in chat
+                    const errorMessage = "An error occurred while processing the message. Please try again.";
+                    addMessageToChat('ai', errorMessage);
+                }
+            };
+            
+            ws.onclose = function(event) {
+                console.log('WebSocket connection closed', event);
+                    
+                    // Only show reconnection messages if we're still on the chat tab
+                    if (document.querySelector('.tab-pane.show.active#chat')) {
+                connectionStatus.style.display = 'block';
+                        connectionStatus.textContent = 'מנותק. מנסה להתחבר מחדש...';
+                sendButton.disabled = true;
+                
+                // Try to reconnect after a delay
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket, 3000);
+                } else {
+                            connectionStatus.textContent = 'לא ניתן להתחבר לשרת הצ\'אט. אנא רענן את הדף.';
+                        }
+                }
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                    
+                    // Only show error messages if we're still on the chat tab
+                    if (document.querySelector('.tab-pane.show.active#chat')) {
+                connectionStatus.style.display = 'block';
+                        connectionStatus.textContent = 'שגיאת התחברות';
+                    }
+            };
+            } catch (error) {
+                console.error('Error creating WebSocket connection:', error);
+                connectionStatus.style.display = 'block';
+                connectionStatus.textContent = 'שגיאה ביצירת חיבור לשרת הצ\'אט';
+            }
+        }
+        
+        function addMessageToChat(role, content, timestamp = null) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageElement = document.createElement('div');
+            
+            // Set classes based on message role
+            messageElement.classList.add('message', role === 'user' ? 'message-user' : 'message-ai');
+            
+            // Set a data attribute for the timestamp if provided
+            if (timestamp) {
+                messageElement.setAttribute('data-timestamp', timestamp);
+            }
+            
+            // Format the message content based on role
+            let messageHTML = '';
+            
+            if (role === 'user') {
+                messageHTML = `
+                    <div class="message-content">
+                        <div class="message-text">${escapeHtml(content)}</div>
+                        <div class="user-icon"><i class="fas fa-user"></i></div>
+                    </div>
+                `;
+            } else {
+                messageHTML = `
+                    <div class="message-content">
+                        <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                        <div class="message-text">${content}</div>
+                    </div>
+                `;
+            }
+            
+            messageElement.innerHTML = messageHTML;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function showTypingIndicator() {
+            removeTypingIndicator(); // Remove existing one first
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.id = 'typing-indicator';
+            indicator.innerHTML = `
+                <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                <span class="processing-text">מעבד</span>
+                <div class="dots">
+                <span></span>
+                <span></span>
+                <span></span>
+                </div>
+            `;
+            chatMessages.appendChild(indicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Set timeouts for removing the indicator automatically to prevent it getting stuck
+            window.typingTimeoutId = setTimeout(() => {
+                removeTypingIndicator();
+                // If we had to force-remove the typing indicator, reset the chat state
+                if (window.chatState) {
+                    window.chatState.isWaitingForResponse = false;
+                    console.log('Typing indicator timed out, reset chat state:', window.chatState);
+                }
+            }, 30000); // Remove after 30 seconds maximum
+            
+            // Create a fallback message if we don't get a response within 5 seconds
+            window.fallbackTimeoutId = setTimeout(() => {
+                // Only create fallback if typing indicator still exists
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    // Create a fallback message to replace the typing indicator
+                    const fallbackMessage = document.createElement('div');
+                    fallbackMessage.classList.add('message', 'message-ai');
+                    fallbackMessage.id = 'fallback-message';
+                    fallbackMessage.innerHTML = `
+                        <div class="message-content">
+                            <div class="ai-icon"><i class="fas fa-robot"></i></div>
+                            <div class="message-text">העוזר מעבד את הבקשה. אנא המתן מספר שניות...</div>
+                        </div>
+                    `;
+                    
+                    // Replace the typing indicator with the fallback message
+                    typingIndicator.remove();
+                    chatMessages.appendChild(fallbackMessage);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    // Update the chat state to indicate we're showing a fallback
+                    if (window.chatState) {
+                        window.chatState.fallbackMessageId = 'fallback-message';
+                        console.log('Fallback message shown, updated chat state:', window.chatState);
+                    }
+                }
+            }, 5000); // Show fallback message after 5 seconds
+        }
+        
+        function removeTypingIndicator() {
+            // Clear any existing timeouts to prevent multiple fallback messages
+            if (window.typingTimeoutId) {
+                clearTimeout(window.typingTimeoutId);
+                window.typingTimeoutId = null;
+            }
+            
+            if (window.fallbackTimeoutId) {
+                clearTimeout(window.fallbackTimeoutId);
+                window.fallbackTimeoutId = null;
+            }
+            
+            // Remove the typing indicator if it exists
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+            
+            // Mark the chat state as ready for a new message
+            window.chatState = window.chatState || {};
+            window.chatState.readyForNewMessage = true;
+        }
+        
+        function sendMessage() {
+            const messageText = messageInput.value.trim();
+            if (!messageText || !ws || ws.readyState !== WebSocket.OPEN) {
+                // If websocket is not connected, try reconnecting
+                if (!ws || ws.readyState !== WebSocket.OPEN) {
+                    connectionStatus.style.display = 'block';
+                    connectionStatus.textContent = 'לא מחובר. מנסה להתחבר מחדש...';
+                    connectWebSocket();
+                }
+                return;
+            }
+            
+            // Ensure chat state is initialized
+            if (!window.chatState) {
+                initializeChatState();
+            }
+            
+            // REMOVED the check that prevented sending messages
+            // Always allow new messages to be sent
+            
+            try {
+                // Add the user message to the chat immediately
+                addMessageToChat('user', messageText);
+                
+                // Send the message to the server
+                const message = {
+                    message: messageText
+                };
+                
+                ws.send(JSON.stringify(message));
+                messageInput.value = '';
+                
+                // Update chat state
+                window.chatState.isWaitingForResponse = true;
+                window.chatState.lastMessageTimestamp = Date.now();
+                
+                // Show typing indicator after sending
+                showTypingIndicator();
+                
+                // Focus the input for next message
+                messageInput.focus();
+                
+                console.log('Message sent, updated chat state:', window.chatState);
+            } catch (error) {
+                console.error('Error sending message:', error);
+                connectionStatus.style.display = 'block';
+                connectionStatus.textContent = 'שגיאה בשליחת הודעה. אנא נסה שנית.';
+                
+                // Reset chat state in case of error
+                window.chatState.isWaitingForResponse = false;
+            }
+        }
+        
+        // Send button click event
+        if (sendButton) {
+            sendButton.addEventListener('click', sendMessage);
+        }
+        
+        // Enter key press event
+        if (messageInput) {
+            messageInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent default form submission
+                    sendMessage();
+                }
+            });
+        }
+        
+        // Initial WebSocket connection when chat tab is active by default
+        if (document.querySelector('.tab-pane.show.active#chat')) {
+            console.log('Chat tab is initially active, connecting WebSocket');
+            
+            // Initialize chat state
+            initializeChatState();
+            
+            connectWebSocket();
+            
+            // Add post-processing to any existing messages
+            cleanupExistingCitations();
+        }
+
+        // Function to initialize chat state
+        function initializeChatState() {
+            // Create a global state object to track chat state
+            window.chatState = {
+                currentStreamingMessageId: null,  // Track streaming message ID
+                lastMessageTimestamp: null,       // Track when the last message was received
+                isWaitingForResponse: false,      // Whether we're waiting for a response
+                readyForNewMessage: true,         // Whether we're ready for a new message
+                fallbackMessageId: null           // ID of current fallback message if any
+            };
+            
+            console.log('Chat state initialized:', window.chatState);
+        }
+
+        // Add event listener to initialize chat state when tab becomes active
+        document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+            if (tab.getAttribute('href') === '#chat') {
+                tab.addEventListener('shown.bs.tab', function() {
+                    // Initialize chat state when chat tab becomes active
+                    initializeChatState();
+                });
+            }
+        });
+
+        // Project overview functionality
+        function loadProjectOverview(forceRefresh = false) {
+            const overviewLoading = document.getElementById('overview-loading');
+            const overviewError = document.getElementById('overview-error');
+            const overviewContent = document.getElementById('overview-content');
+            const errorMessage = document.getElementById('error-message');
+            const lastUpdated = document.getElementById('last-updated');
+            const projectId = window.location.pathname.split('/').pop();
+            const cacheKey = `project_overview_${projectId}`;
+            
+            // Check if we have cached data and it's not expired (less than 24 hours old)
+            const cachedData = localStorage.getItem(cacheKey);
+            const now = new Date();
+            
+            if (!forceRefresh && cachedData) {
+                try {
+                    const { data, timestamp } = JSON.parse(cachedData);
+                    const cachedTime = new Date(timestamp);
+                    const cacheAge = now - cachedTime; // in milliseconds
+                    const oneDayInMs = 24 * 60 * 60 * 1000;
+                    
+                    // If cache is less than 24 hours old, use it
+                    if (cacheAge < oneDayInMs) {
+                        console.log('Using cached overview data from:', new Date(timestamp).toLocaleString());
+                        displayOverviewData(data, timestamp);
+                        return;
+                    } else {
+                        console.log('Cache expired, fetching fresh data');
+                    }
+                } catch (error) {
+                    console.error('Error parsing cached data:', error);
+                    // If there's an error with the cache, continue to fetch fresh data
+                }
+            }
+            
+            // Show loading, hide error and content
+            overviewLoading.style.display = 'block';
+            overviewError.style.display = 'none';
+            overviewContent.style.display = 'none';
+            
+            // Query the AI assistant for project overview information using fetch (not WebSocket)
+            fetch(`/api/projects/${projectId}/overview`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                // Add credentials to ensure cookies are sent
+                credentials: 'same-origin'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.detail || 'שגיאה בטעינת נתוני הפרויקט');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Check if there was an error
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Save to cache
+                    const timestamp = now.toISOString();
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        data,
+                        timestamp
+                    }));
+                    
+                    // Display the data
+                    displayOverviewData(data, timestamp);
+                })
+                .catch(error => {
+                    console.error('Error fetching project overview:', error);
+                    
+                    // Show error message
+                    errorMessage.textContent = error.message || 'שגיאה בטעינת נתוני הפרויקט';
+                    overviewLoading.style.display = 'none';
+                    overviewError.style.display = 'block';
+
+                    // Add retry button to error message
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'btn btn-sm btn-outline-danger mt-2';
+                    retryBtn.innerHTML = '<i class="fas fa-redo me-1"></i> נסה שנית';
+                    retryBtn.onclick = () => loadProjectOverview(true); // Force refresh on retry
+                    
+                    // Clear any existing retry button
+                    const existingRetryBtn = overviewError.querySelector('button');
+                    if (existingRetryBtn) {
+                        existingRetryBtn.remove();
+                    }
+                    
+                    overviewError.appendChild(retryBtn);
+                });
+        }
+
+        // Helper function to display overview data
+        function displayOverviewData(data, timestamp) {
+            const overviewLoading = document.getElementById('overview-loading');
+            const overviewContent = document.getElementById('overview-content');
+            const lastUpdated = document.getElementById('last-updated');
+            
+            // Update overview content
+            document.getElementById('overview-contractor').textContent = data.contractor || 'לא צוין';
+            document.getElementById('overview-budget').textContent = data.budget || 'לא צוין';
+            document.getElementById('overview-completion').textContent = data.completion_date || 'לא צוין';
+            document.getElementById('overview-status').textContent = data.status || 'לא צוין';
+            
+            // Update plans list
+            const plansList = document.getElementById('overview-plans');
+            plansList.innerHTML = '';
+            
+            if (data.plans && Array.isArray(data.plans) && data.plans.length > 0) {
+                data.plans.forEach(plan => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = plan;
+                    plansList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.className = 'list-group-item overview-plans-empty';
+                li.textContent = 'אין תוכניות רשומות';
+                plansList.appendChild(li);
+            }
+            
+            // Update meetings list
+            const meetingsList = document.getElementById('overview-meetings');
+            meetingsList.innerHTML = '';
+            
+            if (data.meetings && Array.isArray(data.meetings) && data.meetings.length > 0) {
+                data.meetings.forEach(meeting => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.textContent = meeting;
+                    meetingsList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.className = 'list-group-item overview-meetings-empty';
+                li.textContent = 'אין פגישות רשומות';
+                meetingsList.appendChild(li);
+            }
+            
+            // Display the last update time
+            const lastUpdatedDate = new Date(timestamp);
+            const timeString = lastUpdatedDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+            const dateString = lastUpdatedDate.toLocaleDateString('he-IL');
+            
+            // Calculate how long ago the data was updated
+            const now = new Date();
+            const timeDiff = now - lastUpdatedDate;
+            const minutesAgo = Math.floor(timeDiff / (1000 * 60));
+            const hoursAgo = Math.floor(timeDiff / (1000 * 60 * 60));
+            const daysAgo = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            
+            let timeAgoText = '';
+            if (daysAgo > 0) {
+                timeAgoText = `(לפני ${daysAgo} ימים)`;
+            } else if (hoursAgo > 0) {
+                timeAgoText = `(לפני ${hoursAgo} שעות)`;
+            } else if (minutesAgo > 0) {
+                timeAgoText = `(לפני ${minutesAgo} דקות)`;
+            } else {
+                timeAgoText = '(עכשיו)';
+            }
+            
+            lastUpdated.innerHTML = `עודכן לאחרונה: ${dateString} ${timeString} <span class="time-ago">${timeAgoText}</span>`;
+            lastUpdated.classList.add('updated-info');
+            
+            // Hide loading, show content
+            overviewLoading.style.display = 'none';
+            overviewContent.style.display = 'block';
+        }
+
+        // Initial load of overview data if overview tab is active by default
+        if (document.querySelector('.tab-pane.show.active#overview')) {
+            console.log('Overview tab is initially active, loading overview data');
+            loadProjectOverview();
+        }
+
+        // Update refresh button to force refresh
+        document.getElementById('refresh-overview')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> מרענן...';
+            
+            loadProjectOverview(true); // Force refresh
+            
+            // Re-enable button after a short delay
+            setTimeout(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> רענן נתונים';
+            }, 1000);
+        });
+
+        // Add a post-processing function to clean up any citations that might have slipped through
+        function cleanupExistingCitations() {
+            // Process all AI messages in the chat
+            const aiMessages = document.querySelectorAll('.message-ai .message-text');
+            console.log('CLEANUP (Existing) - Checking', aiMessages.length, 'AI messages');
+            
+            aiMessages.forEach((messageEl, index) => {
+                // Get the current HTML content
+                const content = messageEl.innerHTML;
+                
+                // Check if there are any citation markers
+                if (content.includes('citeturn') || content.includes('contentReference')) {
+                    console.log(`CLEANUP (Existing) - Message ${index} contains citations`);
+                    
+                    // First try: standard regex replacements
+                    let cleanedContent = content;
+                    
+                    // Try progressive replacement strategies (from simple to complex)
+                    
+                    // Strategy 1: Basic replacement for common patterns
+                    cleanedContent = cleanedContent.replace(/\s*citeturn\d+file\d+\.\s*$/g, '.');
+                    cleanedContent = cleanedContent.replace(/\s*citeturn\d+file\d+\s*$/g, '');
+                    
+                    // Strategy 2: If still present, use word boundaries for better matching
+                    if (cleanedContent.includes('citeturn') || cleanedContent.includes('contentReference')) {
+                        console.log(`CLEANUP (Existing) - Basic replacement didn't work for message ${index}, trying word boundaries`);
+                        
+                        cleanedContent = cleanedContent.replace(/\s*\bciteturn\d+file\d+\b\.?/g, '.');
+                        cleanedContent = cleanedContent.replace(/\s*\b:contentReference\[oaicite:\d+\]\{index=\d+\}\b\.?/g, '.');
+                    }
+                    
+                    // Strategy 3: For the specific pattern we're seeing
+                    if (cleanedContent.includes('citeturn0file0')) {
+                        console.log(`CLEANUP (Existing) - Found specific pattern in message ${index}`);
+                        // More specific replacement
+                        cleanedContent = cleanedContent.replace(/\s*citeturn0file0\.?/g, '.');
+                    }
+                    
+                    // Strategy 4: For more complex HTML content, handle paragraphs individually
+                    if (cleanedContent.includes('citeturn') || cleanedContent.includes('contentReference')) {
+                        console.log(`CLEANUP (Existing) - Using paragraph-level approach for message ${index}`);
+                        
+                        // Process each paragraph (inside p tags) separately
+                        const paragraphs = cleanedContent.match(/<p>.*?<\/p>/g) || [];
+                        for (let i = 0; i < paragraphs.length; i++) {
+                            if (paragraphs[i].includes('citeturn') || paragraphs[i].includes('contentReference')) {
+                                const cleanPara = paragraphs[i]
+                                    .replace(/\s*citeturn\d+file\d+\.?/g, '.')
+                                    .replace(/\s*:contentReference\[oaicite:\d+\]\{index=\d+\}\.?/g, '.');
+                                    
+                                cleanedContent = cleanedContent.replace(paragraphs[i], cleanPara);
+                            }
+                        }
+                    }
+                    
+                    // Strategy 5: If all else fails, try splitting
+                    if (cleanedContent.includes('citeturn') || cleanedContent.includes('contentReference')) {
+                        console.log(`CLEANUP (Existing) - Progressive replacements didn't work for message ${index}, trying splitting`);
+                        
+                        // Find all citation patterns
+                        const citationMatches = cleanedContent.match(/citeturn\d+file\d+|:contentReference\[oaicite:\d+\]\{index=\d+\}/g);
+                        
+                        if (citationMatches) {
+                            console.log(`CLEANUP (Existing) - Found patterns in message ${index}:`, citationMatches);
+                            
+                            // Try splitting and rejoining at each citation
+                            citationMatches.forEach(citation => {
+                                const parts = cleanedContent.split(citation);
+                                if (parts.length > 1) {
+                                    // Join with period
+                                    cleanedContent = parts.join('.');
+                                }
+                            });
+                        }
+                    }
+                    
+                    // Final fallback - if still present, cut at first occurrence
+                    if (cleanedContent.includes('citeturn') || cleanedContent.includes('contentReference')) {
+                        console.log(`CLEANUP (Existing) - Using cut-at-position approach for message ${index}`);
+                        
+                        // Find the position of the first citation marker
+                        const citeTurnPos = cleanedContent.indexOf('citeturn');
+                        const contentRefPos = cleanedContent.indexOf('contentReference');
+                        
+                        let cutPos = -1;
+                        if (citeTurnPos >= 0 && contentRefPos >= 0) {
+                            cutPos = Math.min(citeTurnPos, contentRefPos);
+                        } else if (citeTurnPos >= 0) {
+                            cutPos = citeTurnPos;
+                        } else if (contentRefPos >= 0) {
+                            cutPos = contentRefPos;
+                        }
+                        
+                        if (cutPos > 0) {
+                            // Find the last HTML tag start or end before the cut position
+                            const lastTagPos = Math.max(
+                                cleanedContent.lastIndexOf('<', cutPos),
+                                cleanedContent.lastIndexOf('>', cutPos)
+                            );
+                            
+                            // If we found a tag close to the cut position, adjust the cut
+                            if (lastTagPos > 0 && lastTagPos > cutPos - 20) {
+                                cutPos = lastTagPos + 1;
+                            }
+                            
+                            cleanedContent = cleanedContent.substring(0, cutPos).trim();
+                            
+                            // Add period if needed and the content doesn't end with an HTML tag
+                            if (!cleanedContent.endsWith('>') && !cleanedContent.endsWith('.')) {
+                                cleanedContent += '.';
+                            }
+                        }
+                    }
+                    
+                    // Update the message content if changes were made
+                    if (cleanedContent !== content) {
+                        console.log(`CLEANUP (Existing) - Updated message ${index}`);
+                        messageEl.innerHTML = cleanedContent;
+                    }
+                }
+            });
+        }
+        
+        // Add a listener to process messages when chat tab becomes active
+        document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+            if (tab.getAttribute('href') === '#chat') {
+                tab.addEventListener('shown.bs.tab', function() {
+                    // Give the UI time to render, then clean up citations
+                    setTimeout(cleanupExistingCitations, 100);
+                });
+            }
+        });
+
+        // Add functions for graph data handling
+        // Project graphs functionality
+        function loadProjectGraphData(forceRefresh = false) {
+            const graphsLoading = document.getElementById('graphs-loading');
+            const graphsError = document.getElementById('graphs-error');
+            const graphsContent = document.getElementById('graphs-content');
+            const errorMessage = document.getElementById('graphs-error-message');
+            const lastUpdated = document.getElementById('graphs-last-updated');
+            const projectId = window.location.pathname.split('/').pop();
+            const cacheKey = `project_graphs_${projectId}`;
+            
+            // Check if we have cached data and it's not expired (less than 24 hours old)
+            const cachedData = localStorage.getItem(cacheKey);
+            const now = new Date();
+            
+            if (!forceRefresh && cachedData) {
+                try {
+                    const { data, timestamp } = JSON.parse(cachedData);
+                    const cachedTime = new Date(timestamp);
+                    const cacheAge = now - cachedTime; // in milliseconds
+                    const oneDayInMs = 24 * 60 * 60 * 1000;
+                    
+                    // If cache is less than 24 hours old, use it
+                    if (cacheAge < oneDayInMs) {
+                        console.log('Using cached graph data from:', new Date(timestamp).toLocaleString());
+                        displayGraphData(data, timestamp);
+                        return;
+                    } else {
+                        console.log('Cache expired, fetching fresh graph data');
+                    }
+                } catch (error) {
+                    console.error('Error parsing cached graph data:', error);
+                    // If there's an error with the cache, continue to fetch fresh data
+                }
+            }
+            
+            // Show loading, hide error and content
+            graphsLoading.style.display = 'block';
+            graphsError.style.display = 'none';
+            graphsContent.style.display = 'none';
+            
+            // Query the AI assistant for project graph information
+            fetch(`/api/projects/${projectId}/graphs`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                // Add credentials to ensure cookies are sent
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.detail || 'שגיאה בטעינת נתוני הגרפים');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Check if there was an error
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Save to cache
+                const timestamp = now.toISOString();
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    data,
+                    timestamp
+                }));
+                
+                // Display the data
+                displayGraphData(data, timestamp);
+            })
+            .catch(error => {
+                console.error('Error fetching graph data:', error);
+                graphsLoading.style.display = 'none';
+                graphsError.style.display = 'block';
+                errorMessage.textContent = error.message || 'שגיאה בטעינת נתוני הגרפים';
+            });
+        }
+        
+        function displayGraphData(data, timestamp) {
+            const graphsLoading = document.getElementById('graphs-loading');
+            const graphsContent = document.getElementById('graphs-content');
+            const lastUpdated = document.getElementById('graphs-last-updated');
+            
+            // Hide loading, show content
+            graphsLoading.style.display = 'none';
+            graphsContent.style.display = 'block';
+            
+            // Set last updated timestamp
+            lastUpdated.textContent = `עודכן לאחרונה: ${new Date(timestamp).toLocaleString()}`;
+            
+            // Render charts
+            renderBudgetChart(data.budget_distribution);
+            renderProgressChart(data.progress_timeline);
+            renderTasksChart(data.task_status);
+            renderForecastChart(data.completion_forecast);
+        }
+        
+        // Render budget distribution pie chart
+        function renderBudgetChart(budgetData) {
+            const ctx = document.getElementById('budget-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.budgetChart) {
+                window.budgetChart.destroy();
+            }
+            
+            // Use primary colors from Material Design
+            const colors = [
+                'rgba(233, 30, 99, 0.7)',  // pink
+                'rgba(156, 39, 176, 0.7)', // purple
+                'rgba(63, 81, 181, 0.7)',  // indigo
+                'rgba(33, 150, 243, 0.7)', // blue
+                'rgba(0, 188, 212, 0.7)',  // cyan
+                'rgba(76, 175, 80, 0.7)'   // green
+            ];
+            
+            window.budgetChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: budgetData.map(item => item.category),
+                    datasets: [{
+                        data: budgetData.map(item => item.amount),
+                        backgroundColor: colors.slice(0, budgetData.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            rtl: true,
+                            labels: {
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            rtl: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ₪${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Render progress timeline line chart
+        function renderProgressChart(progressData) {
+            const ctx = document.getElementById('progress-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.progressChart) {
+                window.progressChart.destroy();
+            }
+            
+            window.progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: progressData.map(item => item.date),
+                    datasets: [{
+                        label: 'התקדמות באחוזים',
+                        data: progressData.map(item => item.percentage),
+                        borderColor: 'rgba(233, 30, 99, 1)',
+                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'אחוז השלמה',
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'תאריך',
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Render tasks status chart
+        function renderTasksChart(tasksData) {
+            const ctx = document.getElementById('tasks-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.tasksChart) {
+                window.tasksChart.destroy();
+            }
+            
+            const colors = [
+                'rgba(76, 175, 80, 0.7)',  // green (completed)
+                'rgba(33, 150, 243, 0.7)', // blue (in progress)
+                'rgba(255, 152, 0, 0.7)',  // orange (planned)
+                'rgba(244, 67, 54, 0.7)'   // red (blocked)
+            ];
+            
+            window.tasksChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tasksData.map(item => item.status),
+                    datasets: [{
+                        data: tasksData.map(item => item.count),
+                        backgroundColor: colors.slice(0, tasksData.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            rtl: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw || 0;
+                                    return `${value} משימות`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Render completion forecast chart
+        function renderForecastChart(forecastData) {
+            const ctx = document.getElementById('forecast-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.forecastChart) {
+                window.forecastChart.destroy();
+            }
+            
+            window.forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: forecastData.map(item => item.date),
+                    datasets: [
+                        {
+                            label: 'תחזית התקדמות',
+                            data: forecastData.map(item => item.forecast),
+                            borderColor: 'rgba(156, 39, 176, 1)',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'התקדמות בפועל',
+                            data: forecastData.map(item => item.actual),
+                            borderColor: 'rgba(33, 150, 243, 1)',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            borderWidth: 2,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'אחוז השלמה',
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'תאריך',
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            rtl: true,
+                            labels: {
+                                font: {
+                                    family: 'Rubik, sans-serif'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Check if graphs tab is initially active
+        if (document.querySelector('.tab-pane.show.active#graphs')) {
+            console.log('Graphs tab is initially active, loading graph data');
+            loadProjectGraphData();
+        }
+        
+        // Update refresh button to force refresh
+        document.getElementById('refresh-graphs')?.addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-sync-alt fa-spin me-1"></i> מרענן...';
+            
+            loadProjectGraphData(true); // Force refresh
+            
+            // Re-enable button after a short delay
+            setTimeout(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-sync-alt me-1"></i> רענן נתונים';
+            }, 1000);
+        });
+
+        // Add a debug button to reset chat state if needed
+        // Add this right after the existing connection status div
+        const chatConnectionStatus = document.getElementById('connection-status');
+        if (chatConnectionStatus) {
+            const resetButton = document.createElement('button');
+            resetButton.textContent = 'Reset Chat State';
+            resetButton.className = 'btn btn-sm btn-outline-danger ms-2 d-none';
+            resetButton.id = 'reset-chat-state';
+            resetButton.onclick = function() {
+                initializeChatState();
+                alert('Chat state has been reset');
+            };
+            chatConnectionStatus.parentNode.insertBefore(resetButton, chatConnectionStatus.nextSibling);
+            
+            // Add debug key combination to show/hide reset button (Alt+Shift+R)
+            document.addEventListener('keydown', function(e) {
+                if (e.altKey && e.shiftKey && e.key === 'R') {
+                    const resetBtn = document.getElementById('reset-chat-state');
+                    if (resetBtn.classList.contains('d-none')) {
+                        resetBtn.classList.remove('d-none');
+                    } else {
+                        resetBtn.classList.add('d-none');
+                    }
+                }
+            });
+        }
+    });
+
+    // Function to safely escape HTML
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Function to format message content (handle citations and other special formatting)
+    function formatMessage(message) {
+        if (!message) return '';
+        
+        // Log the original message for debugging
+        console.log('MESSAGE DEBUG - Original:', message);
+        
+        // STEP 1: Extract farewell message first before any other processing
+        let farewell = '';
+        
+        // Hard-coded split approach - find the farewell phrase directly
+        const farewellPhrases = [
+            'אשמח לענות על כל שאלה נוספת',
+            'אשמח לענות על שאלות נוספות',
+            'בכבוד רב, עוזר הפרויקט',
+            'בכבוד רב,',
+            'לשירותכם,',
+            'בברכה,'
+        ];
+        
+        // Find the earliest appearance of any farewell phrase
+        let earliestPos = -1;
+        let matchedPhrase = '';
+        
+        for (const phrase of farewellPhrases) {
+            const pos = message.indexOf(phrase);
+            if (pos !== -1 && (earliestPos === -1 || pos < earliestPos)) {
+                earliestPos = pos;
+                matchedPhrase = phrase;
+            }
+        }
+        
+        // If we found a farewell phrase, extract everything from that point to the end
+        if (earliestPos !== -1) {
+            farewell = message.substring(earliestPos);
+            message = message.substring(0, earliestPos).trim();
+            console.log('EXTRACTED FAREWELL:', farewell);
+            
+            // Clean up the content to make sure it ends with proper punctuation
+            if (message.endsWith('.')) {
+                // Good - already has period
+            } else if (message.endsWith(',')) {
+                message = message.substring(0, message.length - 1) + '.';
+            } else {
+                message += '.';
+            }
+        }
+        
+        // Clean up citations
+        message = removeCitations(message);
+        
+        // Format the message content
+        let formattedContent = basicMessageFormatting(message);
+        
+        // Add the farewell message as a separate paragraph with a special class if it exists
+        if (farewell) {
+            formattedContent += `<p class="message-farewell">${farewell}</p>`;
+        }
+        
+        return formattedContent;
+    }
+    
+    // Function to remove citation markers
+    function removeCitations(message) {
+        let cleanedMessage = message;
+        
+        // Remove all source citations like 【4:0†source】or any content in 【】brackets
+        cleanedMessage = cleanedMessage.replace(/【\d+:\d+†[^】]*】/g, '');
+        
+        // Handle other citation formats as in the original function
+        if (cleanedMessage.includes('citeturn')) {
+            console.log('CITATION FIX (Frontend) - Using hard cutoff for citation');
+            const parts = cleanedMessage.split(/citeturn\d*file\d*/);
+            if (parts.length > 1) {
+                cleanedMessage = parts[0].trim();
+                if (!cleanedMessage.endsWith('.')) {
+                    cleanedMessage += '.';
+                }
+            }
+        }
+        
+        // Old citation format - remove citations at end of sentences or text
+        cleanedMessage = cleanedMessage.replace(/\s*citeturn\d+file\d+\.\s*$/g, '.');
+        cleanedMessage = cleanedMessage.replace(/\s*citeturn\d+file\d+\s*$/g, '');
+        
+        // New citation format - similar approach for content references
+        cleanedMessage = cleanedMessage.replace(/\s*:?contentReference\[oaicite:\d+\]\{index=\d+\}\.\s*$/g, '.');
+        cleanedMessage = cleanedMessage.replace(/\s*:?contentReference\[oaicite:\d+\]\{index=\d+\}\s*$/g, '');
+        
+        // Final emergency check - if still not clean, just cut at the citation marker
+        if (cleanedMessage.includes('citeturn') || cleanedMessage.includes('contentReference')) {
+            const citeTurnPos = cleanedMessage.indexOf('citeturn');
+            const contentRefPos = cleanedMessage.indexOf('contentReference');
+            
+            let cutPos = -1;
+            if (citeTurnPos >= 0 && contentRefPos >= 0) {
+                cutPos = Math.min(citeTurnPos, contentRefPos);
+            } else if (citeTurnPos >= 0) {
+                cutPos = citeTurnPos;
+            } else if (contentRefPos >= 0) {
+                cutPos = contentRefPos;
+            }
+            
+            if (cutPos > 0) {
+                cleanedMessage = cleanedMessage.substring(0, cutPos).trim();
+                if (!cleanedMessage.endsWith('.')) {
+                    cleanedMessage += '.';
+                }
+            }
+        }
+        
+        return cleanedMessage;
+    }
+    
+    // Function to apply basic formatting to message
+    function basicMessageFormatting(message) {
+        if (!message) return '';
+        
+        console.log("BASIC FORMAT - Processing message:", message.substring(0, 50) + "...");
+        
+        // Handle code blocks before anything else - especially JSON blocks
+        const codeBlockRegex = /```(?:json)?([^`]+)```/g;
+        message = message.replace(codeBlockRegex, function(match, codeContent) {
+            // If it's likely JSON, try to parse and format it nicely
+            if (match.includes('```json') || /^\s*{/.test(codeContent)) {
+                try {
+                    // Try to parse as JSON
+                    const jsonObj = JSON.parse(codeContent);
+                    // Return the actual content without the code block markers
+                    return formatJsonContent(jsonObj);
+                } catch (e) {
+                    console.log("Failed to parse JSON in code block:", e);
+                    // If parsing fails, just return the content without the code block markers
+                    return codeContent.trim();
+                }
+            }
+            // For non-JSON code blocks, just return the content
+            return `<pre><code>${codeContent.trim()}</code></pre>`;
+        });
+        
+        // Pre-process the message to insert line breaks before numbered list items
+        message = message.replace(/(\.\s+)(\d+)(\.\s+)([^\n]+)/g, "$1\n$2$3$4");
+        message = message.replace(/(\.\s*)(\d+)(\.)(\S+)/g, "$1\n$2$3 $4");
+        
+        // Replace markdown-style bold with HTML
+        message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Split into lines for processing
+        const lines = message.split('\n');
+        const result = [];
+        
+        // Track state
+        let inList = false;
+        let listItems = [];
+        let listType = null; // 'ordered' or 'unordered'
+        let currentListNumber = 1;
+        
+        // Process each line
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Skip empty lines but end any active list
+            if (!line) {
+                if (inList) {
+                    if (listType === 'ordered') {
+                        result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                    } else {
+                        result.push(`<ul>${listItems.join('')}</ul>`);
+                    }
+                    inList = false;
+                    listItems = [];
+                    listType = null;
+                }
+                result.push('');
+                continue;
+            }
+            
+            // 1. Check for section headers (ending with a colon)
+            if (/:$/.test(line) && !line.match(/^\s*[-•*]/) && !line.match(/^\d+\./)) {
+                // End any active list
+                if (inList) {
+                    if (listType === 'ordered') {
+                        result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                    } else {
+                        result.push(`<ul>${listItems.join('')}</ul>`);
+                    }
+                    inList = false;
+                    listItems = [];
+                    listType = null;
+                }
+                
+                // Add the header
+                result.push(`<h3>${line}</h3>`);
+                continue;
+            }
+            
+            // 2. Check for numbered list items (e.g., "1. text")
+            const numberedMatch = line.match(/^(\d+)\.\s+(.*)/);
+            if (numberedMatch) {
+                const numberPart = parseInt(numberedMatch[1], 10);
+                const itemContent = numberedMatch[2];
+                
+                // Format the content (without touching the number)
+                const formattedContent = formatLineContent(itemContent);
+                
+                // If starting a new ordered list or there's a number jump
+                if (!inList || listType !== 'ordered' || numberPart !== currentListNumber) {
+                    // End any existing list
+                    if (inList) {
+                        if (listType === 'ordered') {
+                            result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                        } else {
+                            result.push(`<ul>${listItems.join('')}</ul>`);
+                        }
+                        listItems = [];
+                    }
+                    
+                    inList = true;
+                    listType = 'ordered';
+                    currentListNumber = numberPart;
+                }
+                
+                // Add this item to the current list
+                listItems.push(`<li>${formattedContent}</li>`);
+                currentListNumber++;
+                continue;
+            }
+            
+            // 3. Check for bullet list items (e.g., "- text" or "• text")
+            const bulletMatch = line.match(/^\s*[-•*]\s+(.*)/);
+            if (bulletMatch) {
+                const itemContent = bulletMatch[1];
+                
+                // Format the content
+                const formattedContent = formatLineContent(itemContent);
+                
+                // If not already in an unordered list, start one
+                if (!inList || listType !== 'unordered') {
+                    // End any existing list
+                    if (inList) {
+                        if (listType === 'ordered') {
+                            result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                        }
+                        listItems = [];
+                    }
+                    
+                    inList = true;
+                    listType = 'unordered';
+                }
+                
+                // Add this item to the current list
+                listItems.push(`<li>${formattedContent}</li>`);
+                continue;
+            }
+            
+            // 4. Process items in sections as bullet points even without bullet markers
+            // This assumes any line after a section header that isn't a header, numbered list, or explicit bullet
+            // is an implicit bullet point
+            if (result.length > 0 && result[result.length-1].startsWith('<h3>') && 
+                !line.match(/^\d+\./) && !line.startsWith("•") && !line.startsWith("-")) {
+                
+                // Format the content
+                const formattedContent = formatLineContent(line);
+                
+                // If not already in an unordered list, start one
+                if (!inList || listType !== 'unordered') {
+                    // End any existing list
+                    if (inList) {
+                        if (listType === 'ordered') {
+                            result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                        }
+                        listItems = [];
+                    }
+                    
+                    inList = true;
+                    listType = 'unordered';
+                }
+                
+                // Add this item to the current list
+                listItems.push(`<li>${formattedContent}</li>`);
+                continue;
+            }
+            
+            // 5. Regular paragraph (not a list item or header)
+            // End any active list
+            if (inList) {
+                if (listType === 'ordered') {
+                    result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+                } else {
+                    result.push(`<ul>${listItems.join('')}</ul>`);
+                }
+                inList = false;
+                listItems = [];
+                listType = null;
+            }
+            
+            // Format and add the paragraph
+            const formattedContent = formatLineContent(line);
+            result.push(`<p>${formattedContent}</p>`);
+        }
+        
+        // Handle any remaining list items
+        if (inList) {
+            if (listType === 'ordered') {
+                result.push(`<ol start="${currentListNumber - listItems.length}">${listItems.join('')}</ol>`);
+            } else {
+                result.push(`<ul>${listItems.join('')}</ul>`);
+            }
+        }
+        
+        // Join the result with appropriate spacing
+        let formattedMessage = result.join('');
+        
+        return formattedMessage;
+    }
+    
+    // Helper function to format a single line of content
+    function formatLineContent(text) {
+        if (!text) return '';
+        
+        // Highlight dates in format DD/MM/YYYY
+        text = text.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g, 
+                          '<span class="highlight">$1</span>/<span class="highlight">$2</span>/<span class="highlight">$3</span>');
+        
+        // Highlight dates in format DD במאי YYYY
+        text = text.replace(/(\d{1,2})(\s+[א-ת]+\s+)(\d{4})/g, 
+                          '<span class="highlight">$1</span>$2<span class="highlight">$3</span>');
+        
+        // Highlight prices with ₪ symbol
+        text = text.replace(/(\d{1,3}(?:,\d{3})*(?:\.\d+)?)(\s*₪)/g, 
+                          '<span class="highlight">$1</span>$2');
+        
+        // Highlight measurements
+        text = text.replace(/(\d{1,3}(?:,\d{3})*)(\s*(?:מ"ר|ק"מ|מ'|ס"מ))/g, 
+                          '<span class="highlight">$1</span>$2');
+        
+        // Highlight large numbers (like project IDs)
+        text = text.replace(/\b(\d{6,})\b(?!\s*(?:מ"ר|ק"מ|₪))/g, 
+                          '<span class="highlight">$1</span>');
+        
+        // Highlight numbers with units
+        text = text.replace(/(\b\d{1,3})(\s+(?:קומות|חדרים|מבנים|מגדלים|שעות|ימים|חודשים|שנים))/g, 
+                          '<span class="highlight">$1</span>$2');
+        
+        // Prevent highlighting list numbers
+        text = text.replace(/^(\d+)\.\s+/, '<strong>$1.</strong> ');
+        
+        return text;
+    }
+
+    // Function to periodically clean up any citation markers in existing messages
+    function setupPeriodicCitationCleanup() {
+        if (document.querySelector('.tab-pane.show.active#chat')) {
+            // Run an initial cleanup
+            cleanupExistingCitations();
+            
+            // Then set up a periodic check every 1.5 seconds
+            const cleanupInterval = setInterval(() => {
+                if (document.querySelector('.tab-pane.show.active#chat')) {
+                    cleanupExistingCitations();
+                } else {
+                    // If we've switched away from the chat tab, stop the interval
+                    clearInterval(cleanupInterval);
+                }
+            }, 1500);
+            
+            // Store the interval ID on the window object so we can clear it if needed
+            window.cleanupIntervalId = cleanupInterval;
+        }
+    }
+    
+    // Run the setup function when the chat tab is shown
+    document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+        if (tab.getAttribute('href') === '#chat') {
+            tab.addEventListener('shown.bs.tab', setupPeriodicCitationCleanup);
+        }
+    });
+    
+    // Initial setup if we start on the chat tab
+    if (document.querySelector('.tab-pane.show.active#chat')) {
+        setupPeriodicCitationCleanup();
+    }
+
+    // Project status update
+    document.getElementById('status-dropdown')?.addEventListener('change', async function() {
+        try {
+            const dropdown = this;
+            const selectedStatus = dropdown.value;
+            const originalStatus = dropdown.querySelector(`option[value="${selectedStatus}"]`).getAttribute('data-original');
+            
+            // Store original selected option
+            const originalOption = dropdown.querySelector('option:checked');
+            const originalIndex = originalOption.index;
+            
+            // Disable dropdown during update
+            dropdown.disabled = true;
+            
+            // Add a loading spinner next to dropdown
+            const loadingSpinner = document.createElement('span');
+            loadingSpinner.className = 'spinner-border spinner-border-sm ms-2';
+            loadingSpinner.setAttribute('role', 'status');
+            loadingSpinner.setAttribute('aria-hidden', 'true');
+            dropdown.parentNode.appendChild(loadingSpinner);
+            
+            // Update status via API
+            const response = await fetch('/api/projects/{{ project._id }}/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: selectedStatus })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update overview status if present
+                const overviewStatus = document.getElementById('overview-status');
+                if (overviewStatus) {
+                    let statusText = 'בתכנון';
+                    if (data.status === 'in_progress') statusText = 'בביצוע';
+                    else if (data.status === 'completed') statusText = 'גמור';
+                    
+                    overviewStatus.textContent = statusText;
+                }
+                
+                // Show success message
+                showAlert('success', 'סטטוס הפרויקט עודכן בהצלחה');
+            } else {
+                // Handle error
+                const errorData = await response.json();
+                showAlert('danger', 'שגיאה בעדכון סטטוס: ' + errorData.detail);
+                
+                // Reset to original selection
+                dropdown.selectedIndex = originalIndex;
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            showAlert('danger', 'שגיאה בעדכון סטטוס');
+        } finally {
+            // Re-enable dropdown and remove spinner
+            const dropdown = document.getElementById('status-dropdown');
+            dropdown.disabled = false;
+            const spinner = dropdown.parentNode.querySelector('.spinner-border');
+            if (spinner) spinner.remove();
+        }
+    });
+
+    // Helper function to show alerts
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the card body
+        const cardBody = document.querySelector('.card-body');
+        cardBody.insertBefore(alertDiv, cardBody.firstChild);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 5000);
+    }
+
+    // Helper function to format JSON content
+    function formatJsonContent(jsonObj) {
+        let result = '';
+        
+        // Helper function to create a properly formatted section
+        function formatSection(obj, prefix = '') {
+            let sectionHtml = '';
+            
+            // Handle top-level project details
+            if (prefix === '' && obj.project_details) {
+                return formatSection(obj.project_details, '');
+            }
+            
+            // Handle arrays
+            if (Array.isArray(obj)) {
+                sectionHtml += '<ul>';
+                for (const item of obj) {
+                    if (typeof item === 'object' && item !== null) {
+                        sectionHtml += '<li>' + formatSection(item, prefix) + '</li>';
+                    } else {
+                        sectionHtml += '<li>' + formatLineContent(String(item)) + '</li>';
+                    }
+                }
+                sectionHtml += '</ul>';
+                return sectionHtml;
+            }
+            
+            // Handle objects - create sections for each key
+            if (typeof obj === 'object' && obj !== null) {
+                // Special formatting for timeline or specific structure objects
+                if (obj.timeline || obj.design_start || obj.construction_start) {
+                    sectionHtml += '<div class="data-section">';
+                    for (const [key, value] of Object.entries(obj)) {
+                        if (typeof value === 'object' && value !== null) {
+                            sectionHtml += `<h3>${hebrewKeyNames(key)}:</h3>`;
+                            sectionHtml += formatSection(value, key);
+                        } else {
+                            const formattedKey = hebrewKeyNames(key);
+                            const formattedValue = formatLineContent(String(value));
+                            sectionHtml += `<div class="data-row"><span class="key">${formattedKey}:</span> <span class="value">${formattedValue}</span></div>`;
+                        }
+                    }
+                    sectionHtml += '</div>';
+                    return sectionHtml;
+                }
+                
+                // Regular object - format each property
+                for (const [key, value] of Object.entries(obj)) {
+                    if (Array.isArray(value)) {
+                        sectionHtml += `<h3>${hebrewKeyNames(key)}:</h3>`;
+                        sectionHtml += formatSection(value, key);
+                    } else if (typeof value === 'object' && value !== null) {
+                        sectionHtml += `<h3>${hebrewKeyNames(key)}:</h3>`;
+                        sectionHtml += formatSection(value, key);
+                    } else {
+                        const formattedKey = hebrewKeyNames(key);
+                        const formattedValue = formatLineContent(String(value));
+                        sectionHtml += `<div class="data-row"><span class="key">${formattedKey}:</span> <span class="value">${formattedValue}</span></div>`;
+                    }
+                }
+                return sectionHtml;
+            }
+            
+            // Simple value
+            return formatLineContent(String(obj));
+        }
+        
+        // Helper function to convert English keys to Hebrew
+        function hebrewKeyNames(key) {
+            const keyMappings = {
+                'name': 'שם הפרויקט',
+                'location': 'מיקום',
+                'land_area': 'שטח הקרקע',
+                'planned_built_area': 'שטח בנוי מתוכנן',
+                'features': 'מאפיינים',
+                'status': 'סטטוס',
+                'technology_and_infrastructure': 'טכנולוגיה ותשתיות',
+                'timeline': 'לוח זמנים',
+                'budget': 'תקציב',
+                'contractor': 'קבלן מבצע',
+                'latest_status': 'סטטוס אחרון',
+                'plans': 'תוכניות',
+                'meetings': 'פגישות',
+                'design_start': 'תחילת תכנון',
+                'design_end': 'סיום תכנון',
+                'construction_start': 'תחילת בנייה',
+                'expected_completion': 'צפי לסיום',
+                'project_details': 'פרטי הפרויקט'
+            };
+            
+            return keyMappings[key] || key;
+        }
+        
+        result = formatSection(jsonObj);
+        return result;
+    }
+</script>
+
+<!-- Task Javascript -->
+<script>
+    // Add a 'now' variable for due date calculations
+    const now = new Date();
+    
+    // Task filtering functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusFilter = document.getElementById('task-status-filter');
+        const priorityFilter = document.getElementById('task-priority-filter');
+        const assigneeFilter = document.getElementById('task-assignee-filter');
+        const resetButton = document.getElementById('reset-task-filters');
+        const taskRows = document.querySelectorAll('.task-row');
+        
+        function applyFilters() {
+            const statusValue = statusFilter.value;
+            const priorityValue = priorityFilter.value;
+            const assigneeValue = assigneeFilter.value;
+            
+            taskRows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const rowPriority = row.getAttribute('data-priority');
+                const rowAssignee = row.getAttribute('data-assignee');
+                
+                const statusMatch = statusValue === 'all' || rowStatus === statusValue;
+                const priorityMatch = priorityValue === 'all' || rowPriority === priorityValue;
+                const assigneeMatch = assigneeValue === 'all' || rowAssignee === assigneeValue;
+                
+                if (statusMatch && priorityMatch && assigneeMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        if (statusFilter && priorityFilter && assigneeFilter) {
+            statusFilter.addEventListener('change', applyFilters);
+            priorityFilter.addEventListener('change', applyFilters);
+            assigneeFilter.addEventListener('change', applyFilters);
+            
+            if (resetButton) {
+                resetButton.addEventListener('click', function() {
+                    statusFilter.value = 'all';
+                    priorityFilter.value = 'all';
+                    assigneeFilter.value = 'all';
+                    applyFilters();
+                });
+            }
+        }
+        
+        // Make entire task row clickable
+        taskRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't navigate if clicking on buttons or links
+                if (e.target.tagName === 'BUTTON' || 
+                    e.target.tagName === 'A' || 
+                    e.target.tagName === 'I' ||
+                    e.target.closest('button') ||
+                    e.target.closest('a') ||
+                    e.target.closest('form')) {
+                    return;
+                }
+                
+                const taskId = this.getAttribute('data-task-id');
+                window.location.href = `/tasks/${taskId}`;
+            });
+            
+            // Add hover effect
+            row.style.cursor = 'pointer';
+        });
+    });
+</script>
+
+<!-- New Task Modal -->
+<div class="modal fade" id="newTaskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    משימה חדשה
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/projects/{{ project._id }}/tasks" method="post">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="title" class="form-label">כותרת <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required
+                                   placeholder="הזן כותרת קצרה למשימה">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="description" class="form-label">תיאור <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required
+                                      placeholder="תאר את המשימה בפירוט"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="assigned_to" class="form-label">משוייך ל <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <select class="form-select" id="assigned_to" name="assigned_to" required>
+                                    <option disabled selected value="">-- בחר משתמש --</option>
+                                    <option value="{{ project.owner }}">{{ project.owner }} (בעלים)</option>
+                                    {% for member in project.members %}
+                                    <option value="{{ member }}">{{ member }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label">עדיפות</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-flag"></i></span>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="low">נמוכה</option>
+                                    <option value="medium" selected>בינונית</option>
+                                    <option value="high">גבוהה</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="due_date" class="form-label">תאריך יעד</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                <input type="date" class="form-control" id="due_date" name="due_date">
+                            </div>
+                            <div class="form-text">השאר ריק אם אין תאריך יעד ספציפי</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> ביטול
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> צור משימה
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add CSS for avatar initials -->
+<style>
+    .avatar-initials {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background-color: var(--bs-primary);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .task-row:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    th.sortable {
+        cursor: pointer;
+    }
+    
+    th.sortable:after {
+        content: "↕";
+        opacity: 0.3;
+        margin-right: 5px;
+    }
+    
+    .task-title-link {
+        color: var(--bs-primary);
+    }
+    
+    .task-title-link:hover {
+        color: var(--bs-primary);
+        text-decoration: underline !important;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 4rem auto;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 4rem;
+        color: #dc3545;
+        margin-bottom: 1.5rem;
+    }
+    
+    .error-title {
+        font-size: 1.75rem;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+    }
+    
+    .error-message {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .error-actions {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-icon">
+        <i class="fas fa-exclamation-circle"></i>
+    </div>
+    <h1 class="error-title">{{ title }}</h1>
+    <p class="error-message">{{ error_message }}</p>
+    <div class="error-actions">
+        <a href="/" class="btn btn-secondary">
+            <i class="fas fa-home me-1"></i> דף הבית
+        </a>
+        <a href="/myprojects" class="btn btn-primary">
+            <i class="fas fa-project-diagram me-1"></i> הפרויקטים שלי
+        </a>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block additional_styles %}
+<style>
+    .login-container {
+        max-width: 450px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-md);
+        padding: 2rem;
+        border-top: 3px solid var(--primary-color);
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .login-header h2 {
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .login-header p {
+        color: var(--text-light);
+    }
+    
+    .error-message {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-group .input-with-icon {
+        position: relative;
+    }
+    
+    .form-group .input-with-icon i {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-light);
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 1rem;
+        padding-right: 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .btn-login {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-login:hover {
+        background-color: var(--primary-dark);
+    }
+    
+    .register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: var(--text-light);
+    }
+    
+    .register-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-header">
+        <h2>ברוך הבא</h2>
+        <p>אנא הזן את פרטי ההתחברות שלך</p>
+    </div>
+    
+    {% if error %}
+    <div class="error-message">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        <div class="form-group">
+            <label for="username">שם משתמש</label>
+            <div class="input-with-icon">
+                <input type="text" id="username" name="username" required autocomplete="username">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">סיסמה</label>
+            <div class="input-with-icon">
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <i class="fas fa-lock"></i>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-login">
+            <i class="fas fa-sign-in-alt"></i> התחבר
+        </button>
+    </form>
+    
+    <div class="register-link">
+        אין לך חשבון? <a href="/register">הירשם כאן</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('password');
+        
+        // Simple animation when user is typing the password
+        if (passwordInput) {
+            passwordInput.addEventListener('input', function() {
+                if (this.value.length > 0) {
+                    this.style.borderColor = 'var(--primary-color)';
+                } else {
+                    this.style.borderColor = 'var(--border-color)';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 
