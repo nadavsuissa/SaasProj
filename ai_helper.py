@@ -9,6 +9,7 @@ from functools import partial
 from openai import OpenAI
 import json
 from dotenv import load_dotenv
+import openai
 
 # Load environment variables
 load_dotenv()
