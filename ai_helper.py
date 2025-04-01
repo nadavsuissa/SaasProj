@@ -24,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger("ai_helper")
 
 # Set OpenAI API key from environment variable with no default
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = "sk-proj-XXOHIuf572QACyL6VUx8_-mPIO6EZWJWlAxVPBJJNKBkYpGpp7hx7fMeXCUruR5MsmMTJ3kHp-T3BlbkFJ2eRDEMSJtHUWZDusYpMyw8BS6nBbTMqR"
 if not OPENAI_API_KEY:
     logger.critical("OPENAI_API_KEY environment variable not set!")
     raise ValueError("OPENAI_API_KEY environment variable is required")
