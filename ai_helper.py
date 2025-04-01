@@ -25,12 +25,13 @@ logging.basicConfig(
 logger = logging.getLogger("ai_helper")
 
 # Set OpenAI API key from environment variable with no default
-openai.api_key = os.getenv("OPENAI_API_KEY")
-if not openai.api_key:
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
     logger.critical("OPENAI_API_KEY environment variable not set!")
     raise ValueError("OPENAI_API_KEY environment variable is required")
 
-client = OpenAI(api_key=openai.api_key)
+openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Constants for timeouts and retries
 API_TIMEOUT = 60  # seconds
