@@ -14,6 +14,77 @@
         direction: rtl;
     }
 
+    /* Add Project Sidebar Styles */
+    .project-sidebar {
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 0;
+        margin-bottom: 20px;
+        position: sticky;
+        top: 100px;
+    }
+
+    .project-sidebar .nav-link {
+        padding: 15px 20px;
+        border-radius: 0;
+        color: var(--text-color);
+        transition: all 0.3s ease;
+        border-right: 5px solid transparent;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+    }
+
+    .project-sidebar .nav-link i {
+        margin-left: 15px;
+        width: 24px;
+        text-align: center;
+        font-size: 18px;
+        opacity: 0.8;
+    }
+
+    .project-sidebar .nav-link.active {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: var(--primary-color);
+        border-right-color: var(--primary-color);
+    }
+
+    .project-sidebar .nav-link:hover:not(.active) {
+        background-color: #f8f9fa;
+        border-right-color: #e0e0e0;
+    }
+    
+    .project-content-card {
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+    
+    /* Adding a border between sidebar items */
+    .project-sidebar .nav-link:not(:last-child) {
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    /* Make the sidebar full height */
+    @media (min-width: 768px) {
+        .project-sidebar {
+            min-height: calc(100vh - 250px);
+        }
+        
+        .project-row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .project-row > [class*='col-'] {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+
+    /* Keep all existing styles */
     .chat-header {
         padding: 15px 20px;
         background: linear-gradient(195deg, var(--primary-color), var(--primary-dark));
@@ -666,6 +737,18 @@
 {% endblock %}
 
 {% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/myprojects">הפרויקטים שלי</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ project.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
 <div class="row mb-4">
     <div class="col-lg-8 col-md-7">
         <h2>{{ project.name }}</h2>
@@ -708,41 +791,36 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header bg-white">
-        <ul class="nav nav-tabs card-header-tabs" role="tablist">
-            <li class="nav-item">
+    <div class="row project-row">
+        <!-- Project Sidebar - Add this new section -->
+        <div class="col-md-3 mb-4">
+            <div class="project-sidebar">
+                <div class="list-group list-group-flush">
                 <a class="nav-link active" data-bs-toggle="tab" href="#overview" role="tab">
-                    <i class="fas fa-info-circle me-1"></i> סקירה
+                        <i class="fas fa-info-circle"></i> סקירה
                 </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#chat" role="tab">
-                    <i class="fas fa-comments me-1"></i> צ'אט AI
+                        <i class="fas fa-comments"></i> צ'אט AI
                 </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#tasks" role="tab">
-                    <i class="fas fa-tasks me-1"></i> משימות
+                        <i class="fas fa-tasks"></i> משימות
                 </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#files" role="tab">
-                    <i class="fas fa-file me-1"></i> קבצים
+                        <i class="fas fa-file"></i> קבצים
                 </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" data-bs-toggle="tab" href="#graphs" role="tab">
-                    <i class="fas fa-chart-bar me-1"></i> מידע גרפי
+                        <i class="fas fa-chart-bar"></i> מידע גרפי
                 </a>
-            </li>
-            <li class="nav-item">
                 <a class="nav-link" href="/projects/{{ project._id }}/members">
-                    <i class="fas fa-users me-1"></i> משתמשים
+                        <i class="fas fa-users"></i> משתמשים
                 </a>
-            </li>
-        </ul>
     </div>
+            </div>
+        </div>
+        
+        <!-- Project Content -->
+        <div class="col-md-9">
+            <div class="card project-content-card">
     <div class="card-body">
         <div class="tab-content">
             <!-- Overview Tab -->
@@ -1239,6 +1317,7 @@
                                             <i class="fas fa-sync-alt me-1"></i> רענן נתונים
                                         </button>
                                         <small class="text-muted me-2" id="graphs-last-updated"></small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1254,6 +1333,32 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Helper function to check if a tab is active
+        function isTabActive(tabId) {
+            const tab = document.getElementById(tabId);
+            return tab && (tab.classList.contains('active') || tab.classList.contains('show'));
+        }
+        
+        // Check for hash in URL to activate the corresponding tab
+        if (window.location.hash) {
+            const tabId = window.location.hash.substring(1);
+            const tabLink = document.querySelector(`.project-sidebar .nav-link[href="#${tabId}"]`);
+            
+            if (tabLink) {
+                // Simulate a click on the tab link
+                tabLink.click();
+                
+                // Special handling for chat tab
+                if (tabId === 'chat') {
+                    console.log('Chat tab active by URL hash, initializing WebSocket');
+                    setTimeout(() => {
+                        initializeChatState();
+                        connectWebSocket();
+                    }, 200);
+                }
+            }
+        }
+        
         // Bootstrap tabs integration
         document.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
             tab.addEventListener('shown.bs.tab', function(e) {
@@ -1293,6 +1398,89 @@
                         console.log('Closing WebSocket when switching away from chat tab');
                         ws.close();
                     }
+                }
+            });
+        });
+        
+        // Add additional event listeners to the sidebar navigation
+        document.querySelectorAll('.project-sidebar .nav-link').forEach(sidebarLink => {
+            sidebarLink.addEventListener('click', function(e) {
+                // Don't handle standard links like 'members'
+                if (!this.getAttribute('data-bs-toggle')) {
+                    return;
+                }
+                
+                // Prevent default behavior to handle it manually
+                e.preventDefault();
+                
+                // Get the target tab ID
+                const targetTab = this.getAttribute('href').substring(1);
+                const tabElement = document.getElementById(targetTab);
+                
+                // Don't proceed if we're already on this tab
+                const isAlreadyActive = tabElement && tabElement.classList.contains('active');
+                if (isAlreadyActive) {
+                    console.log('Tab already active, skipping activation');
+                    return;
+                }
+                
+                // Update active class in sidebar
+                document.querySelectorAll('.project-sidebar .nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Ensure Bootstrap properly activates the tab content
+                if (tabElement) {
+                    // Create and dispatch the correct Bootstrap tab events
+                    const showEvent = new Event('show.bs.tab', { bubbles: true });
+                    const shownEvent = new Event('shown.bs.tab', { bubbles: true });
+                    
+                    // Extend the event object with Bootstrap tab event properties
+                    showEvent.target = this;
+                    shownEvent.target = this;
+                    
+                    // Dispatch the 'show' event before changing classes
+                    this.dispatchEvent(showEvent);
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    
+                    // Add active class to the selected tab
+                    tabElement.classList.add('show', 'active');
+                    
+                    // Update URL hash for bookmarking and browser history
+                    window.location.hash = '#' + targetTab;
+                    
+                    // Special handling for the chat tab - ensure WebSocket is connected
+                    if (targetTab === 'chat') {
+                        console.log('Chat tab activated from sidebar, initializing if needed');
+                        
+                        // Initialize chat state
+                        if (!window.chatState) {
+                            initializeChatState();
+                        }
+                        
+                        // Always wait for the tab to be fully shown before connecting
+                        setTimeout(() => {
+                            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                                connectWebSocket();
+                            }
+                            // Clean up existing chat messages
+                            cleanupExistingCitations();
+                        }, 200);
+                    } else if (ws && ws.readyState === WebSocket.OPEN) {
+                        // Close WebSocket when switching away from the chat tab
+                        console.log('Leaving chat tab, closing WebSocket');
+                        ws.close();
+                    }
+                    
+                    // Fire the shown event after all changes
+                    setTimeout(() => {
+                        this.dispatchEvent(shownEvent);
+                    }, 150);
                 }
             });
         });
@@ -1474,6 +1662,18 @@
         const maxReconnectAttempts = 5;
         
         function connectWebSocket() {
+            // First check if we're on the chat tab
+            if (!isTabActive('chat')) {
+                console.log('Not on chat tab, postponing WebSocket connection');
+                return;
+            }
+            
+            // If we already have an active connection, don't create a new one
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                console.log('WebSocket already connected, skipping reconnection');
+                return;
+            }
+            
             // Show connection status
             connectionStatus.style.display = 'block';
             connectionStatus.textContent = 'מתחבר לשרת צ\'אט...';
@@ -1481,13 +1681,6 @@
             // Get the project ID from the URL
             const pathParts = window.location.pathname.split('/');
             const projectId = pathParts[pathParts.length - 1];
-            
-            // Check if we're on the chat tab before connecting
-            if (!document.querySelector('.tab-pane.show.active#chat')) {
-                console.log('Not on chat tab, not connecting WebSocket');
-                connectionStatus.style.display = 'none';
-                return;
-            }
             
             // Close existing connection if any
             if (ws) {
@@ -1505,11 +1698,23 @@
             ws.onopen = function(event) {
                 console.log('WebSocket connection established');
                     connectionStatus.textContent = 'מחובר';
-                setTimeout(() => {
+                    // Don't show the connection status at all
                     connectionStatus.style.display = 'none';
-                }, 2000);
                 sendButton.disabled = false;
                 reconnectAttempts = 0;
+                    
+                    // Request chat history from the server
+                    ws.send(JSON.stringify({
+                        action: 'get_history',
+                        project_id: projectId
+                    }));
+                    
+                    // Scroll to the bottom of the chat to see the latest messages
+                    if (chatMessages) {
+                        setTimeout(() => {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }, 100);
+                    }
             };
             
             ws.onmessage = function(event) {
@@ -1518,23 +1723,34 @@
                     console.log('WebSocket message received:', data);
                         
                     // If not on chat tab anymore, ignore messages
-                    if (!document.querySelector('.tab-pane.show.active#chat')) {
+                        if (!isTabActive('chat')) {
                         console.log('Not on chat tab, ignoring WebSocket message');
                         return;
                     }
                     
-                    // Log AI message content for debugging
-                    if (data.sender === "AI Assistant") {
-                        console.log('AI MESSAGE - Original content:', data.message);
-                        
-                        // Early detection of citation markers
-                        if (data.message.includes('citeturn') || data.message.includes('contentReference')) {
-                            console.log('AI MESSAGE - Citation markers detected, applying cleanup');
+                        // Handle chat history response
+                        if (data.action === 'history_response' && Array.isArray(data.messages)) {
+                            console.log('Received chat history:', data.messages.length, 'messages');
+                            
+                            // Clear existing messages that came from template
+                            chatMessages.innerHTML = '';
+                            
+                            // Add each message to the chat
+                            data.messages.forEach(msg => {
+                                addMessageToChat(
+                                    msg.is_ai ? 'ai' : 'user',
+                                    msg.message,
+                                    msg.timestamp
+                                );
+                            });
+                            
+                            // Scroll to the bottom
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            return;
                         }
-                    }
-                
-                    // Handle typing indicator
-                    if (data.is_typing) {
+                        
+                        // Handle AI thinking/streaming response
+                        if (data.type === 'thinking') {
                         // Only show typing indicator if we haven't shown a fallback message yet
                         if (!document.getElementById('fallback-message')) {
                             showTypingIndicator();
@@ -1714,18 +1930,33 @@
             ws.onclose = function(event) {
                 console.log('WebSocket connection closed', event);
                     
-                    // Only show reconnection messages if we're still on the chat tab
-                    if (document.querySelector('.tab-pane.show.active#chat')) {
+                    // Only attempt to reconnect if the tab is still active
+                    // and if we're not in an infinite reconnection loop
+                    if (isTabActive('chat')) {
+                        
+                        // Store the last close time to detect reconnection loops
+                        const now = Date.now();
+                        if (!window.lastWsCloseTime || (now - window.lastWsCloseTime) > 5000) {
+                            // Not in a rapid reconnection loop
+                            window.lastWsCloseTime = now;
+                            
                 connectionStatus.style.display = 'block';
                         connectionStatus.textContent = 'מנותק. מנסה להתחבר מחדש...';
                 sendButton.disabled = true;
                 
-                // Try to reconnect after a delay
+                            // Try to reconnect after a delay, but only if the maximum attempts haven't been reached
                 if (reconnectAttempts < maxReconnectAttempts) {
                     reconnectAttempts++;
+                                console.log(`Attempting to reconnect (attempt ${reconnectAttempts} of ${maxReconnectAttempts})`);
                     setTimeout(connectWebSocket, 3000);
                 } else {
                             connectionStatus.textContent = 'לא ניתן להתחבר לשרת הצ\'אט. אנא רענן את הדף.';
+                            }
+                        } else {
+                            // We're in a rapid reconnection loop, stop trying
+                            console.warn('Detected rapid WebSocket reconnection loop, stopping reconnection attempts');
+                            connectionStatus.style.display = 'block';
+                            connectionStatus.textContent = 'בעיית התחברות לשרת. אנא רענן את הדף.';
                         }
                 }
             };
@@ -1932,7 +2163,7 @@
         }
         
         // Initial WebSocket connection when chat tab is active by default
-        if (document.querySelector('.tab-pane.show.active#chat')) {
+            if (isTabActive('chat')) {
             console.log('Chat tab is initially active, connecting WebSocket');
             
             // Initialize chat state
@@ -1942,6 +2173,32 @@
             
             // Add post-processing to any existing messages
             cleanupExistingCitations();
+            } else {
+                // Check if the chat tab should be active but the classes are missing
+                // This can happen with the sidebar navigation
+                if (window.location.hash === '#chat') {
+                    console.log('Chat tab should be active by URL hash, activating it');
+                    
+                    // Activate the tab content
+                    document.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    document.getElementById('chat').classList.add('show', 'active');
+                    
+                    // Activate the sidebar link
+                    document.querySelectorAll('.project-sidebar .nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    const chatLink = document.querySelector('.project-sidebar .nav-link[href="#chat"]');
+                    if (chatLink) {
+                        chatLink.classList.add('active');
+                    }
+                    
+                    // Initialize chat
+                    initializeChatState();
+                    connectWebSocket();
+                    cleanupExistingCitations();
+                }
         }
 
         // Function to initialize chat state
