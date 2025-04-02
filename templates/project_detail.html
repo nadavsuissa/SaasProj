@@ -615,6 +615,7 @@
     
     .message-content li {
         margin-bottom: 0.5rem;
+        line-height: 1.5;
     }
     
     .highlight {
@@ -731,6 +732,118 @@
         margin-bottom: 0.5rem;
         line-height: 1.5;
     }
+
+    /* Add styles for scrollable overview lists */
+    #overview-plans, #overview-meetings {
+        max-height: 300px; /* Adjust height as needed */
+        overflow-y: auto;
+        padding-left: 10px; /* Add some padding for the scrollbar - adjusted for LTR */
+        scrollbar-width: thin; /* For Firefox */
+        scrollbar-color: #ccc #f8f9fa; /* For Firefox */
+    }
+
+    /* Webkit scrollbar styles */
+    #overview-plans::-webkit-scrollbar, 
+    #overview-meetings::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #overview-plans::-webkit-scrollbar-track,
+    #overview-meetings::-webkit-scrollbar-track {
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    #overview-plans::-webkit-scrollbar-thumb,
+    #overview-meetings::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 10px;
+      border: 2px solid #f8f9fa;
+    }
+
+    #overview-plans .list-group-item, 
+    #overview-meetings .list-group-item {
+        /* Ensure original padding is maintained, adjust if needed */
+         padding-right: 1.25rem; /* Keep original padding for RTL text */
+         padding-left: 0.5rem; /* Add a bit of space opposite the scrollbar */
+    }
+
+    /* Overview Dashboard Card Styles */
+    .overview-dashboard-card {
+        border: 1px solid #e0e0e0; /* Lighter border */
+        border-radius: 12px; /* More rounded corners */
+        background-color: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        height: 100%; /* Ensure cards in a row have same height */
+    }
+
+    .overview-dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .overview-dashboard-card .card-body {
+        padding: 1.25rem; /* Adjust padding */
+    }
+
+    .overview-dashboard-card .card-title {
+        font-size: 1.1rem; /* Slightly smaller title */
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+     .overview-dashboard-card .card-title i {
+        color: var(--primary-color); /* Icon color */
+        font-size: 1.2em; /* Slightly larger icon */
+        margin-left: 8px;
+    }
+
+    .overview-dashboard-card .card-subtitle {
+        font-size: 0.9rem;
+        color: #6c757d; /* Bootstrap text-muted color */
+        margin-bottom: 0.5rem; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .overview-dashboard-card .card-subtitle i {
+        font-size: 1em;
+        margin-left: 5px;
+    }
+
+    .overview-dashboard-card .card-text {
+        font-size: 1rem;
+        color: #495057;
+    }
+    
+    .overview-dashboard-card .card-text.fs-5 {
+         font-size: 1.25rem !important; /* Keep the larger font for key data */
+         color: #212529;
+    }
+    
+    /* Accordion button styling within card */
+    .overview-dashboard-card .accordion-button::after {
+         margin-right: auto; /* Push arrow to the left for RTL */
+         margin-left: 0;
+    }
+    
+    .overview-dashboard-card .accordion-button:not(.collapsed) {
+        color: var(--primary-color); /* Color when expanded */
+        background-color: transparent;
+        box-shadow: none;
+    }
+    
+    .overview-dashboard-card .list-group-item {
+        border: none; /* Remove borders within accordion */
+        padding-right: 0; 
+        padding-left: 0;
+    }
+
 </style>
 <!-- Add Chart.js library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -827,15 +940,8 @@
             <div class="tab-pane fade show active" id="overview" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <div class="card mb-4 overview-description-card">
-                            <div class="card-body">
-                                <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i> תיאור הפרויקט</h5>
-                                <p class="project-description-text">{{ project.description }}</p>
-                            </div>
-                        </div>
-                        
                         <!-- Project overview section from AI assistant -->
-                        <div class="mt-5" id="project-overview-section">
+                        <div class="mt-4" id="project-overview-section">
                             <h5 class="mb-4 overview-section-title"><i class="fas fa-robot me-2"></i> סקירת פרויקט <small class="text-muted">(מידע מהעוזר המלאכותי)</small></h5>
                             
                             <div id="overview-loading" class="text-center py-5">
@@ -851,64 +957,101 @@
                             </div>
                             
                             <div id="overview-content" style="display: none;">
-                                <div class="card mb-4 overview-data-card">
-                                    <div class="card-body">
-                                        <div class="row g-4">
-                                            <div class="col-md-6">
-                                                <div class="overview-item">
-                                                    <h6><i class="fas fa-hard-hat me-2"></i> קבלן מבצע</h6>
-                                                    <p id="overview-contractor">טוען...</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="overview-item">
-                                                    <h6><i class="fas fa-coins me-2"></i> תקציב</h6>
-                                                    <p id="overview-budget">טוען...</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="overview-item">
-                                                    <h6><i class="fas fa-calendar-check me-2"></i> צפי לסיום</h6>
-                                                    <p id="overview-completion">טוען...</p>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="overview-item">
-                                                    <h6><i class="fas fa-info-circle me-2"></i> סטטוס אחרון</h6>
-                                                    <p id="overview-status">טוען...</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row g-4 mb-4">
-                                    <div class="col-md-6">
-                                        <div class="card h-100 overview-card-plans">
-                                            <div class="card-header bg-light">
-                                                <h6 class="m-0"><i class="fas fa-tasks me-2"></i> תוכניות להמשך</h6>
-                                            </div>
+                                <div class="row g-4"> <!-- Use g-4 for spacing -->
+                                    <!-- Description Card -->
+                                    <div class="col-lg-12"> <!-- Full width for description -->
+                                        <div class="card overview-dashboard-card">
                                             <div class="card-body">
-                                                <ul class="list-group list-group-flush" id="overview-plans">
-                                                    <li class="list-group-item text-center text-muted">טוען...</li>
-                                                </ul>
+                                                <h6 class="card-title"><i class="fas fa-info-circle me-2"></i> תיאור הפרויקט</h6>
+                                                <p class="project-description-text">{{ project.description }}</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="card h-100 overview-card-meetings">
-                                            <div class="card-header bg-light">
-                                                <h6 class="m-0"><i class="fas fa-calendar me-2"></i> פגישות קרובות</h6>
+
+                                    <!-- Key Data Cards -->
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="card overview-dashboard-card">
+                                            <div class="card-body text-center">
+                                                 <h6 class="card-subtitle text-muted mb-2"><i class="fas fa-hard-hat me-2"></i> קבלן מבצע</h6>
+                                                 <p class="card-text fs-5 fw-bold" id="overview-contractor">טוען...</p>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                         <div class="card overview-dashboard-card">
+                                            <div class="card-body text-center">
+                                                 <h6 class="card-subtitle text-muted mb-2"><i class="fas fa-coins me-2"></i> תקציב</h6>
+                                                 <p class="card-text fs-5 fw-bold" id="overview-budget">טוען...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                         <div class="card overview-dashboard-card">
+                                            <div class="card-body text-center">
+                                                 <h6 class="card-subtitle text-muted mb-2"><i class="fas fa-calendar-check me-2"></i> צפי לסיום</h6>
+                                                 <p class="card-text fs-5 fw-bold" id="overview-completion">טוען...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6">
+                                        <div class="card overview-dashboard-card">
+                                            <div class="card-body text-center">
+                                                 <h6 class="card-subtitle text-muted mb-2"><i class="fas fa-clipboard-check me-2"></i> סטטוס אחרון</h6>
+                                                 <p class="card-text fs-5 fw-bold" id="overview-status">טוען...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Plans Card (with Accordion) -->
+                                    <div class="col-lg-6">
+                                        <div class="card overview-dashboard-card">
                                             <div class="card-body">
-                                                <ul class="list-group list-group-flush" id="overview-meetings">
-                                                    <li class="list-group-item text-center text-muted">טוען...</li>
-                                                </ul>
+                                                 <div class="accordion" id="overviewPlansAccordion">
+                                                     <div class="accordion-item border-0">
+                                                         <h2 class="accordion-header" id="headingPlans">
+                                                             <button class="accordion-button collapsed bg-transparent shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePlans" aria-expanded="false" aria-controls="collapsePlans">
+                                                                 <h6 class="card-title mb-0"><i class="fas fa-tasks me-2"></i> תוכניות להמשך</h6>
+                                                             </button>
+                                                         </h2>
+                                                         <div id="collapsePlans" class="accordion-collapse collapse" aria-labelledby="headingPlans" data-bs-parent="#overviewPlansAccordion">
+                                                             <div class="accordion-body p-0 pt-3">
+                                                                 <ul class="list-group list-group-flush" id="overview-plans">
+                                                                     <li class="list-group-item text-center text-muted">טוען...</li>
+                                                                 </ul>
+                                                             </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                            </div>
+                                         </div>
+                                    </div>
+
+                                     <!-- Meetings Card (with Accordion) -->
+                                    <div class="col-lg-6">
+                                         <div class="card overview-dashboard-card">
+                                            <div class="card-body">
+                                                 <div class="accordion" id="overviewMeetingsAccordion">
+                                                     <div class="accordion-item border-0">
+                                                         <h2 class="accordion-header" id="headingMeetings">
+                                                             <button class="accordion-button collapsed bg-transparent shadow-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMeetings" aria-expanded="false" aria-controls="collapseMeetings">
+                                                                 <h6 class="card-title mb-0"><i class="fas fa-calendar me-2"></i> פגישות קרובות</h6>
+                                                             </button>
+                                                         </h2>
+                                                         <div id="collapseMeetings" class="accordion-collapse collapse" aria-labelledby="headingMeetings" data-bs-parent="#overviewMeetingsAccordion">
+                                                             <div class="accordion-body p-0 pt-3">
+                                                                 <ul class="list-group list-group-flush" id="overview-meetings">
+                                                                     <li class="list-group-item text-center text-muted">טוען...</li>
+                                                                 </ul>
+                                                             </div>
+                                                         </div>
+                                                     </div>
+                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
+                                </div> <!-- End row -->
+
+                                <!-- Refresh Button -->
                                 <div class="text-end mt-4">
                                     <button id="refresh-overview" class="btn btn-outline-primary">
                                         <i class="fas fa-sync-alt me-1"></i> רענן נתונים
