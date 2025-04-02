@@ -115,7 +115,7 @@ async def create_project_assistant(project_name: str, project_type: str, project
             "assistants.create",
             name=f"פרויקט: {project_name}",
             instructions=instructions,
-            model="o3-mini",
+            model="gpt-4o",
             temperature=0.2,
             tools=[
                 {"type": "file_search"}
