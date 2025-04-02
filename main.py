@@ -900,6 +900,37 @@ async def websocket_endpoint(websocket: WebSocket, project_id: str):
                     logger.info(f"Message received from user {username}: {data[:50]}...")
                     
                     message_data = json.loads(data)
+                    
+                    # Handle history request
+                    if message_data.get("action") == "get_history":
+                        logger.info(f"Chat history requested for project {project_id}")
+                        project = get_project(project_id)
+                        if project and "chat_history" in project:
+                            # Convert datetime objects to strings
+                            history = []
+                            for msg in project["chat_history"]:
+                                msg_copy = msg.copy()
+                                # Convert timestamp to string if it's a datetime
+                                if "timestamp" in msg_copy and isinstance(msg_copy["timestamp"], datetime):
+                                    msg_copy["timestamp"] = msg_copy["timestamp"].isoformat()
+                                history.append(msg_copy)
+                            
+                            # Send back the chat history
+                            history_response = {
+                                "action": "history_response",
+                                "messages": history
+                            }
+                            await websocket.send_text(json.dumps(history_response))
+                            logger.info(f"Sent {len(project['chat_history'])} chat history messages")
+                        else:
+                            # Send empty history
+                            await websocket.send_text(json.dumps({
+                                "action": "history_response", 
+                                "messages": []
+                            }))
+                            logger.info("No chat history found or project not found")
+                        continue
+                    
                     user_message = message_data.get("message", "")
                     
                     if not user_message.strip():
