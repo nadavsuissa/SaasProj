@@ -1,0 +1,109 @@
+<!-- Overview Tab -->
+<div class="tab-pane fade active show" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="fas fa-chart-pie me-2"></i>סקירת פרויקט <small class="text-muted">(מידע מהעוזר המלאכותי)</small></h4>
+        <button id="refresh-overview" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sync-alt me-1"></i>רענן נתונים
+        </button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="overview-loading" class="justify-content-center align-items-center my-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">טוען...</span>
+        </div>
+        <span class="ms-2">טוען סקירה...</span>
+    </div>
+
+    <!-- AI Generated Content Area -->
+    <div id="overview-content-area">
+        <!-- Project Description -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>תיאור הפרויקט</h5>
+            </div>
+            <div class="card-body">
+                <p id="overview-description" class="card-text">טוען...</p>
+            </div>
+        </div>
+
+        <!-- Key Info Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-hard-hat me-1"></i>קבלן מבצע</h6>
+                        <p id="overview-contractor" class="card-text fs-5 fw-bold">טוען...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-coins me-1"></i>תקציב</h6>
+                        <p id="overview-budget" class="card-text fs-5 fw-bold">טוען...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-calendar-check me-1"></i>צפי לסיום</h6>
+                        <p id="overview-completion-date" class="card-text fs-5 fw-bold">טוען...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center h-100">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted"><i class="fas fa-tasks me-1"></i>סטטוס אחרון</h6>
+                        <p id="overview-status" class="card-text fs-5 fw-bold">טוען...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collapsible Sections for Plans and Meetings -->
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light cursor-pointer" data-bs-toggle="collapse" href="#collapsePlans" role="button" aria-expanded="false" aria-controls="collapsePlans">
+                        <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-list-alt me-2 text-info"></i>תוכניות להמשך</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </h5>
+                    </div>
+                    <div class="collapse" id="collapsePlans">
+                        <div class="card-body">
+                            <ul id="overview-plans-list" class="list-group list-group-flush">
+                                <li class="list-group-item">טוען...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light cursor-pointer" data-bs-toggle="collapse" href="#collapseMeetings" role="button" aria-expanded="false" aria-controls="collapseMeetings">
+                        <h5 class="mb-0 d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-calendar-alt me-2 text-success"></i>פגישות קרובות</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </h5>
+                    </div>
+                    <div class="collapse" id="collapseMeetings">
+                        <div class="card-body">
+                             <ul id="overview-meetings-list" class="list-group list-group-flush">
+                                <li class="list-group-item">טוען...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Last Updated Timestamp -->
+    <div class="text-muted text-end small mt-3" id="overview-last-updated">
+        עודכן לאחרונה: טוען...
+    </div>
+</div> 

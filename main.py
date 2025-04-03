@@ -393,6 +393,9 @@ async def profile(request: Request, current_user: dict = Depends(get_current_use
         # Get unread tasks count
         unread_tasks = get_unread_tasks_count(current_user["username"])
         
+        # Add current time for date comparisons in the template
+        now = datetime.now()
+        
         return templates.TemplateResponse(
             "profile.html",
             {
@@ -402,7 +405,8 @@ async def profile(request: Request, current_user: dict = Depends(get_current_use
                 "projects": projects,
                 "invitations": invitations,
                 "tasks": user_tasks,
-                "unread_tasks": unread_tasks
+                "unread_tasks": unread_tasks,
+                "now": now  # Pass current datetime
             }
         )
     except Exception as e:
@@ -513,13 +517,15 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
     if not current_user:
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     
+    logger.info(f"Entering project_detail for project_id: {project_id}")
     try:
         # Get project details
-        print(f"Attempting to fetch project with ID: {project_id}")
+        logger.info(f"Attempting to fetch project with ID: {project_id}")
         project = get_project(project_id)
+        logger.info(f"Project data fetched: {type(project)}")
         
         if not project:
-            print(f"Project not found: {project_id}")
+            logger.warning(f"Project not found: {project_id}")
             return templates.TemplateResponse(
                 "error.html",
                 {
@@ -533,7 +539,7 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
         
         # Check if user has access to this project
         if current_user["username"] not in project.get("members", []) and current_user["username"] != project.get("owner"):
-            print(f"Access denied for user {current_user['username']} to project {project_id}")
+            logger.warning(f"Access denied for user {current_user['username']} to project {project_id}")
             return templates.TemplateResponse(
                 "error.html",
                 {
@@ -545,8 +551,7 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
                 status_code=403
             )
         
-        print(f"Successfully retrieved project: {project['name']}")
-        print(f"Project data: {project.keys()}")
+        logger.info(f"Access check passed for project: {project.get('name', 'N/A')}")
         
         # Convert ObjectId to string for JSON serialization
         project["_id"] = str(project["_id"])
@@ -561,10 +566,13 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
                 except (ValueError, TypeError):
                     # If parsing fails, create a dummy datetime to prevent template errors
                     project[field] = datetime.utcnow()
-                    print(f"Warning: Converted invalid date string in {field} to current datetime")
+                    logger.warning(f"Converted invalid date string in {field} to current datetime")
+        
+        logger.info("Project date fields processed")
         
         # Get project tasks
         project_tasks = get_project_tasks(project_id)
+        logger.info(f"Tasks fetched: {len(project_tasks)} tasks")
         
         # Fix date fields in tasks
         for task in project_tasks:
@@ -577,6 +585,20 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
                         if field != "due_date":  # Keep due_date as None if invalid
                             task[field] = datetime.utcnow()
         
+        logger.info("Task date fields processed")
+        
+        # Prepare sorted & sliced recent tasks for the overview
+        try:
+            # Sort tasks by 'updated_at' descending, handling potential missing keys/None values
+            recent_tasks = sorted(
+                project_tasks,
+                key=lambda task: task.get('updated_at', task.get('created_at', datetime.min)),
+                reverse=True
+            )[:5]
+        except Exception as sort_err:
+            logger.error(f"Error sorting tasks for project {project_id}: {sort_err}", exc_info=True)
+            recent_tasks = [] # Default to empty list on error
+            
         # Add to context
         context = {
             "request": request,
@@ -584,14 +606,33 @@ async def project_detail(request: Request, project_id: str, current_user: dict =
             "project": project,
             "user": current_user,
             "is_owner": current_user["username"] == project.get("owner"),
-            "project_tasks": project_tasks,
+            "project_tasks": project_tasks, # Keep original list for other parts
+            "recent_tasks": recent_tasks, # Add the sorted/sliced list
             "members": project.get("members", []),
             "now": datetime.now()
         }
         
+        # Get member user objects for the Members tab
+        member_usernames = project.get("members", [])
+        member_users = []
+        for username in member_usernames:
+            user = users.find_one({"username": username})
+            if user:
+                # Remove sensitive fields
+                if "password" in user:
+                    del user["password"]
+                if "hashed_password" in user:
+                    del user["hashed_password"]
+                member_users.append(user)
+        
+        # Update context with member user objects
+        context["members"] = member_users
+        
+        logger.info("Context prepared, attempting to render template")
+        
         return templates.TemplateResponse("project_detail.html", context)
     except Exception as e:
-        print(f"Error in project_detail: {e}")
+        logger.error(f"Error in project_detail for project_id {project_id}: {e}", exc_info=True)
         return templates.TemplateResponse(
             "error.html",
             {
@@ -614,16 +655,16 @@ async def upload_project_file(
     
     try:
         # Get project details
-        print(f"File upload request for project {project_id}, file: {file.filename}, size: {file.size if hasattr(file, 'size') else 'unknown'}")
+        logger.info(f"File upload request for project {project_id}, file: {file.filename}, size: {file.size if hasattr(file, 'size') else 'unknown'}")
         project = get_project(project_id)
         
         if not project:
-            print(f"Project not found for file upload: {project_id}")
+            logger.warning(f"Project not found for file upload: {project_id}")
             raise HTTPException(status_code=404, detail="Project not found")
         
         # Check if user has access to this project
         if current_user["username"] not in project.get("members", []) and current_user["username"] != project.get("owner"):
-            print(f"Access denied for user {current_user['username']} to project {project_id} during file upload")
+            logger.warning(f"Access denied for user {current_user['username']} to project {project_id} during file upload")
             raise HTTPException(status_code=403, detail="You don't have access to this project")
         
         # Check file size - OpenAI has a 512MB limit
@@ -632,38 +673,38 @@ async def upload_project_file(
         file_size = len(file_contents)
         
         if file_size > MAX_FILE_SIZE:
-            print(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE} bytes)")
+            logger.warning(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE} bytes)")
             raise HTTPException(status_code=400, detail=f"File too large. Maximum size is 512MB. Your file is {file_size / (1024 * 1024):.2f}MB")
         
-        print(f"File read successfully: {file.filename}, size: {file_size} bytes")
+        logger.info(f"File read successfully: {file.filename}, size: {file_size} bytes")
         
         # Check file type - make sure it's a supported format
         valid_extensions = ['.pdf', '.docx', '.doc', '.txt', '.csv', '.json', '.jpeg', '.jpg', '.png']
         file_ext = os.path.splitext(file.filename)[1].lower()
         
         if file_ext not in valid_extensions:
-            print(f"Unsupported file type: {file_ext}")
+            logger.warning(f"Unsupported file type: {file_ext}")
             raise HTTPException(
                 status_code=400, 
                 detail=f"Unsupported file type: {file_ext}. Supported types are: {', '.join(valid_extensions)}"
             )
         
         # Upload file to OpenAI
-        print(f"Uploading file to OpenAI: {file.filename}")
+        logger.info(f"Uploading file to OpenAI: {file.filename}")
         file_id = await ai_helper.upload_file(file_contents, file.filename)
         
         if not file_id:
-            print("Failed to upload file to OpenAI (no file_id returned)")
+            logger.warning("Failed to upload file to OpenAI (no file_id returned)")
             raise HTTPException(status_code=500, detail="Failed to upload file to OpenAI")
         
-        print(f"File uploaded to OpenAI successfully: {file_id}")
+        logger.info(f"File uploaded to OpenAI successfully: {file_id}")
         
         # Get assistant ID
         assistant_id = project.get("assistant_id")
         
         # Create assistant if it doesn't exist
         if not assistant_id:
-            print(f"Creating new assistant for project: {project['name']}")
+            logger.info(f"Creating new assistant for project: {project['name']}")
             assistant_id = await ai_helper.create_project_assistant(
                 project["name"], 
                 project["type"], 
@@ -671,51 +712,51 @@ async def upload_project_file(
             )
             
             if not assistant_id:
-                print("Failed to create assistant")
+                logger.warning("Failed to create assistant")
                 await ai_helper.delete_file(file_id)
                 raise HTTPException(status_code=500, detail="Failed to create assistant")
             
             # Update project with assistant ID
             update_project_assistant(project_id, assistant_id)
             project["assistant_id"] = assistant_id
-            print(f"Assistant created: {assistant_id}")
+            logger.info(f"Assistant created: {assistant_id}")
         
         # Create thread if it doesn't exist
         thread_id = project.get("thread_id")
         if not thread_id:
-            print(f"Creating new thread for project: {project['name']}")
+            logger.info(f"Creating new thread for project: {project['name']}")
             thread_id = await ai_helper.create_project_thread()
             if not thread_id:
-                print("Failed to create thread")
+                logger.warning("Failed to create thread")
                 await ai_helper.delete_file(file_id)
                 raise HTTPException(status_code=500, detail="Failed to create thread")
             
             # Update project with thread ID
             update_project_thread(project_id, thread_id)
             project["thread_id"] = thread_id
-            print(f"Thread created: {thread_id}")
+            logger.info(f"Thread created: {thread_id}")
         
         # Attach file to assistant
-        print(f"Attaching file {file_id} to assistant {assistant_id}")
+        logger.info(f"Attaching file {file_id} to assistant {assistant_id}")
         result = await ai_helper.attach_file_to_assistant(assistant_id, file_id)
         
         if not result:
             # Clean up by deleting the file if it couldn't be attached
-            print(f"Failed to attach file {file_id} to assistant {assistant_id}")
+            logger.warning(f"Failed to attach file {file_id} to assistant {assistant_id}")
             await ai_helper.delete_file(file_id)
             raise HTTPException(status_code=500, detail="Failed to attach file to assistant")
         
-        print(f"File attached to assistant successfully")
+        logger.info(f"File attached to assistant successfully")
         
         # Add file to project in database
         add_file_to_project(project_id, file_id, file.filename, file.content_type)
-        print(f"File {file_id} added to project {project_id} in database")
+        logger.info(f"File {file_id} added to project {project_id} in database")
         
         # Save file locally as well
         file_path = os.path.join(uploads_dir, f"{file_id}_{file.filename}")
         with open(file_path, "wb") as f:
             f.write(file_contents)
-        print(f"File saved locally: {file_path}")
+        logger.info(f"File saved locally: {file_path}")
         
         return {"success": True, "file_id": file_id, "file_name": file.filename}
     
@@ -724,10 +765,8 @@ async def upload_project_file(
         raise e
     except Exception as e:
         error_msg = f"Error uploading file: {str(e)}"
-        print(error_msg)
-        print(f"Exception type: {type(e).__name__}")
-        import traceback
-        traceback.print_exc()
+        logger.error(error_msg)
+        logger.error(f"Exception type: {type(e).__name__}")
         raise HTTPException(status_code=500, detail=error_msg)
 
 @app.delete("/projects/{project_id}/files/{file_id}")
@@ -773,7 +812,7 @@ async def delete_project_file(
         return {"success": True}
     
     except Exception as e:
-        print(f"Error deleting file: {e}")
+        logger.error(f"Error deleting file: {e}")
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
 @app.post("/projects/create")
@@ -797,23 +836,23 @@ async def create_new_project(
         )
         
         # Create assistant and thread when the project is created
-        print(f"Creating assistant and thread for new project {project_id}")
+        logger.info(f"Creating assistant and thread for new project {project_id}")
         
         # Create assistant
         assistant_id = await ai_helper.create_project_assistant(name, project_type, description)
         if assistant_id:
-            print(f"Created assistant {assistant_id} for project {project_id}")
+            logger.info(f"Created assistant {assistant_id} for project {project_id}")
             update_project_assistant(project_id, assistant_id)
             
             # Create thread
             thread_id = await ai_helper.create_project_thread()
             if thread_id:
-                print(f"Created thread {thread_id} for project {project_id}")
+                logger.info(f"Created thread {thread_id} for project {project_id}")
                 update_project_thread(project_id, thread_id)
         
         return RedirectResponse(url=f"/projects/{project_id}", status_code=status.HTTP_302_FOUND)
     except Exception as e:
-        print(f"Error creating project: {e}")
+        logger.error(f"Error creating project: {e}")
         # Redirect to an error page or back to the form with an error message
         return templates.TemplateResponse(
             "create_project.html",
@@ -1143,9 +1182,10 @@ async def get_project_graphs_api(
         
         # If there's an error in the graph data, return it properly
         if "error" in graph_data:
+            logger.error(f"Error fetching graph data from AI: {graph_data['error']}")
             return {"error": graph_data["error"]}
             
-        # Return the graph data as JSON
+        # Return the graph data as JSON (now contains the 'visualizations' structure)
         return graph_data
         
     except Exception as e:
@@ -1216,12 +1256,12 @@ async def invite_to_project(
     # Redirect back to project page with success/error message
     if success:
         return RedirectResponse(
-            url=f"/projects/{project_id}?success={message}", 
+            url=f"/projects/{project_id}?success={message}#project-members", 
             status_code=status.HTTP_302_FOUND
         )
     else:
         return RedirectResponse(
-            url=f"/projects/{project_id}?error={message}", 
+            url=f"/projects/{project_id}?error={message}#project-members", 
             status_code=status.HTTP_302_FOUND
         )
 
@@ -1364,12 +1404,12 @@ async def remove_member(
     
     if result:
         return RedirectResponse(
-            url=f"/projects/{project_id}/members?success=Member removed successfully", 
+            url=f"/projects/{project_id}?success=Member+removed+successfully#project-members", 
             status_code=status.HTTP_302_FOUND
         )
     else:
         return RedirectResponse(
-            url=f"/projects/{project_id}/members?error=Failed to remove member", 
+            url=f"/projects/{project_id}?error=Failed+to+remove+member#project-members", 
             status_code=status.HTTP_302_FOUND
         )
 

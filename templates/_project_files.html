@@ -1,0 +1,72 @@
+<!-- Project Files Tab -->
+<div class="tab-pane fade" id="files" role="tabpanel">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body files-container p-0">
+            <!-- File Upload Area -->
+            <div class="file-upload-area rounded p-4 d-flex flex-column align-items-center justify-content-center" id="file-drop-area">
+                <div class="upload-icon-container mb-3">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h5 class="fw-bold mb-1">גרור קובץ לכאן או לחץ לבחירת קובץ</h5>
+                <p class="text-muted file-types mb-0">PDF, DOCX, XLSX, JPG, PNG :התמיכה בקבצים</p>
+            </div>
+            
+            <!-- Files Header -->
+            <div class="files-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-folder me-2"></i>קבצי הפרויקט
+                </h6>
+                
+                <!-- Loading indicator for file operations -->
+                <div id="file-loading" class="d-none">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">טוען...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File list -->
+            <div class="p-0">
+                <ul class="file-list m-0" id="project-files">
+                    {% if project.files and project.files|length > 0 %}
+                        {% for file in project.files %}
+                        <li class="file-item" data-file-id="{{ file.file_id }}">
+                            <div class="file-icon">
+                                <i class="
+                                    {% if file.content_type|default('') and file.content_type.startswith('image/') %}fas fa-image
+                                    {% elif file.content_type|default('') == 'application/pdf' %}fas fa-file-pdf
+                                    {% elif file.content_type|default('') and file.content_type.startswith('text/') %}fas fa-file-alt
+                                    {% elif file.content_type|default('') and ('spreadsheet' in file.content_type or file.content_type == 'application/vnd.ms-excel') %}fas fa-file-excel
+                                    {% elif file.content_type|default('') and ('document' in file.content_type or file.content_type == 'application/msword') %}fas fa-file-word
+                                    {% else %}fas fa-file
+                                    {% endif %}
+                                "></i>
+                            </div>
+                            <div class="file-info">
+                                <div class="file-name">{{ file.filename }}</div>
+                                <div class="file-meta">
+                                    <span class="file-date">{{ file.uploaded_at|default("", true) }}</span>
+                                </div>
+                            </div>
+                            <div class="file-actions">
+                                <button class="file-action-btn file-delete-btn" data-file-id="{{ file.file_id }}" title="מחק קובץ">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="no-files text-center py-5 d-none">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open text-muted mb-3"></i>
+                                <p class="mb-0">אין קבצים בפרויקט זה</p>
+                                <p class="text-muted small">העלה קבצים כדי שיופיעו כאן</p>
+                            </div>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <input type="file" id="file-upload-input" class="file-input" multiple hidden />
+        </div>
+    </div>
+</div> 

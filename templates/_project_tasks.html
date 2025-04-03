@@ -1,0 +1,256 @@
+<!-- Project Tasks Tab -->
+<div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+    <div class="project-content-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0"><i class="fas fa-tasks me-2"></i>משימות הפרויקט</h4>
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="fas fa-plus me-1"></i> הוסף משימה
+                </button>
+            </div>
+
+            <!-- Task Filters -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-light py-2">
+                    <h6 class="mb-0"><i class="fas fa-filter me-2"></i>סנן משימות</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row gx-2 gy-2 align-items-end">
+                        <div class="col-md-3 col-sm-6">
+                            <label for="task-filter-status" class="form-label small mb-1">סטטוס</label>
+                            <select class="form-select form-select-sm" id="task-filter-status">
+                                <option value="all" selected>הכל</option>
+                                <option value="pending">ממתין</option>
+                                <option value="in_progress">בעבודה</option>
+                                <option value="completed">הושלם</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label for="task-filter-assignee" class="form-label small mb-1">שייך ל</label>
+                            <select class="form-select form-select-sm" id="task-filter-assignee">
+                                <option value="all" selected>הכל</option>
+                                <option value="{{ user.username }}">אני</option>
+                                {% set members_list = project.members if project.members is iterable else [] %}
+                                {% for member_user in members_list %}
+                                    {% if member_user.username != user.username %}
+                                    <option value="{{ member_user.username }}">{{ member_user.username }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if project.owner != user.username %}
+                                    <option value="{{ project.owner }}">{{ project.owner }} (מנהל)</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <label for="task-filter-priority" class="form-label small mb-1">עדיפות</label>
+                            <select class="form-select form-select-sm" id="task-filter-priority">
+                                <option value="all" selected>הכל</option>
+                                <option value="high">גבוהה</option>
+                                <option value="medium">בינונית</option>
+                                <option value="low">נמוכה</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 col-sm-6 text-md-end">
+                            <button class="btn btn-secondary btn-sm w-100" type="button" id="reset-task-filters">
+                                <i class="fas fa-undo me-1"></i> אפס פילטרים
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Table -->
+            {% set sorted_tasks = project_tasks|sort(attribute='created_at', reverse=true) %}
+            {% if sorted_tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped table-sm align-middle tasks-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">כותרת</th>
+                            <th scope="col" class="text-center">סטטוס</th>
+                            <th scope="col" class="text-center">עדיפות</th>
+                            <th scope="col">שייך ל</th>
+                            <th scope="col">תאריך יעד</th>
+                            <th scope="col" class="text-center">פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasks-table-body">
+                        {% for task in sorted_tasks %}
+                        <tr data-status="{{ task.status }}" data-assignee="{{ task.assigned_to }}" data-priority="{{ task.priority }}">
+                            <td>
+                                <a href="/tasks/{{ task._id }}" class="fw-bold text-decoration-none task-title-link">{{ task.title }}</a>
+                                <div class="small text-muted mt-1">{{ task.description|truncate(80) }}</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="task-badge small {% if task.status == 'pending' %}badge bg-warning text-dark{% elif task.status == 'in_progress' %}badge bg-primary{% elif task.status == 'completed' %}badge bg-success{% else %}badge bg-secondary{% endif %}">
+                                    {% if task.status == 'pending' %}ממתין{% elif task.status == 'in_progress' %}בעבודה{% elif task.status == 'completed' %}הושלם{% else %}{{ task.status }}{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <i class="fas fa-flag fa-fw {% if task.priority == 'high' %}text-danger{% elif task.priority == 'medium' %}text-warning{% else %}text-secondary{% endif %}" title="עדיפות {{ task.priority }}"></i>
+                            </td>
+                            <td>{{ task.assigned_to }}</td>
+                            <td>
+                                {% if task.due_date %}
+                                <span class="{% if task.due_date < now and task.status != 'completed' %}text-danger fw-bold{% endif %}">
+                                    <i class="fas fa-stopwatch fa-fw text-muted me-1"></i>{{ task.due_date.strftime('%d/%m/%y') }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="/tasks/{{ task._id }}" class="btn btn-outline-secondary btn-sm py-1 px-2">
+                                    <i class="fas fa-info-circle me-1"></i> פרטים
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Message for no results found -->
+            <div id="no-tasks-message" class="text-center py-5" style="display: none;">
+                <div class="alert alert-light border shadow-sm d-inline-block" role="alert">
+                    <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                    <p class="mb-2">לא נמצאו משימות התואמות את הסינון.</p>
+                    <button class="btn btn-sm btn-outline-secondary" id="clear-filters-btn">נקה סינון</button>
+                </div>
+            </div>
+            {% else %}
+            <!-- Message for no tasks in project -->
+            <div class="col-12 text-center py-5">
+                <div class="alert alert-info border-0 shadow-sm">
+                    <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                    <h5 class="alert-heading">אין משימות בפרויקט זה</h5>
+                    <p class="mb-3">נהדר! נראה שאין כרגע משימות פתוחות בפרויקט.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                        <i class="fas fa-plus me-1"></i> הוסף משימה ראשונה
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal (Structure remains mostly the same, maybe minor style adjustments if needed) -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg"> <!-- Optional: make modal larger -->
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addTaskModalLabel"><i class="fas fa-plus-circle me-2"></i>הוסף משימה חדשה</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="/projects/{{ project._id }}/tasks" method="post">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="task-title" class="form-label">כותרת המשימה <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="task-title" name="title" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="task-description" class="form-label">תיאור <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="task-description" name="description" rows="4" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="task-assigned-to" class="form-label">שייך ל <span class="text-danger">*</span></label>
+                            <select class="form-select" id="task-assigned-to" name="assigned_to" required>
+                                <option value="" disabled selected>בחר משתמש...</option>
+                                <option value="{{ user.username }}">אני ({{ user.username }})</option>
+                                {% set members_list = project.members if project.members is iterable else [] %}
+                                {% for member_user in members_list %}
+                                    {% if member_user.username != user.username %}
+                                    <option value="{{ member_user.username }}">{{ member_user.username }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if project.owner != user.username %}
+                                    <option value="{{ project.owner }}">{{ project.owner }} (מנהל)</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="task-priority" class="form-label">עדיפות</label>
+                            <select class="form-select" id="task-priority" name="priority">
+                                <option value="low">נמוכה</option>
+                                <option value="medium" selected>בינונית</option>
+                                <option value="high">גבוהה</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="task-due-date" class="form-label">תאריך יעד (אופציונלי)</label>
+                            <input type="date" class="form-control" id="task-due-date" name="due_date">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">ביטול</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> שמור משימה</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taskTableBody = document.getElementById('tasks-table-body'); // Changed selector
+    const filterStatus = document.getElementById('task-filter-status');
+    const filterAssignee = document.getElementById('task-filter-assignee');
+    const filterPriority = document.getElementById('task-filter-priority');
+    const noTasksMessage = document.getElementById('no-tasks-message');
+    const resetFiltersBtn = document.getElementById('reset-task-filters');
+    const clearFiltersMsgBtn = document.getElementById('clear-filters-btn'); // Button inside the 'no results' message
+
+    function filterTasks() {
+        if (!taskTableBody) return;
+        const tasks = taskTableBody.querySelectorAll('tr'); // Changed selector to table rows
+        const statusValue = filterStatus ? filterStatus.value : 'all';
+        const assigneeValue = filterAssignee ? filterAssignee.value : 'all';
+        const priorityValue = filterPriority ? filterPriority.value : 'all';
+        let visibleTasks = 0;
+        let totalTasks = tasks.length; // Total number of tasks in the table
+
+        tasks.forEach(task => {
+            const taskStatus = task.dataset.status;
+            const taskAssignee = task.dataset.assignee;
+            const taskPriority = task.dataset.priority;
+
+            const statusMatch = statusValue === 'all' || taskStatus === statusValue;
+            const assigneeMatch = assigneeValue === 'all' || taskAssignee === assigneeValue;
+            const priorityMatch = priorityValue === 'all' || taskPriority === priorityValue;
+
+            if (statusMatch && assigneeMatch && priorityMatch) {
+                task.style.display = ''; // Show row
+                visibleTasks++;
+            } else {
+                task.style.display = 'none'; // Hide row
+            }
+        });
+
+        // Show message if no tasks match filters (and there are tasks in the table initially)
+        if (noTasksMessage) {
+             noTasksMessage.style.display = (visibleTasks === 0 && totalTasks > 0) ? '' : 'none';
+        }
+    }
+
+    function resetFilters() {
+        if (filterStatus) filterStatus.value = 'all';
+        if (filterAssignee) filterAssignee.value = 'all';
+        if (filterPriority) filterPriority.value = 'all';
+        filterTasks();
+    }
+
+    // Add event listeners if elements exist
+    if (filterStatus) filterStatus.addEventListener('change', filterTasks);
+    if (filterAssignee) filterAssignee.addEventListener('change', filterTasks);
+    if (filterPriority) filterPriority.addEventListener('change', filterTasks);
+    if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', resetFilters);
+    if (clearFiltersMsgBtn) clearFiltersMsgBtn.addEventListener('click', resetFilters);
+
+
+    // Initial filter on page load (in case filters are pre-set or needed)
+    filterTasks(); 
+});
+</script> 

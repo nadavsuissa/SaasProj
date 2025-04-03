@@ -1539,13 +1539,21 @@ async def get_project_graph_data(project: dict) -> dict:
     - task_status: Data for bar chart showing tasks by status
     - completion_forecast: Data for line chart showing completion forecast
     """
+    # This function is being replaced by get_suggested_visualizations
+    # Keep the signature for now but call the new function
+    return await get_suggested_visualizations(project)
+
+async def get_suggested_visualizations(project: dict) -> dict:
+    """
+    Query the assistant to suggest relevant data visualizations based on project content.
+    """
     try:
         assistant_id = project.get("assistant_id")
         thread_id = project.get("thread_id")
         
         # Create assistant if it doesn't exist (same logic as in get_ai_response)
         if not assistant_id:
-            logger.info(f"No assistant found for project {project.get('name')}, creating new assistant")
+            logger.info(f"No assistant found for project {project.get('name', 'unknown')}, creating new assistant")
             assistant_id = await create_project_assistant(project["name"], project["type"], project["description"])
             if not assistant_id:
                 return {
@@ -1558,7 +1566,7 @@ async def get_project_graph_data(project: dict) -> dict:
         
         # Create thread if it doesn't exist
         if not thread_id:
-            logger.info(f"No thread found for project {project.get('name')}, creating new thread")
+            logger.info(f"No thread found for project {project.get('name', 'unknown')}, creating new thread")
             thread_id = await create_project_thread()
             if not thread_id:
                 return {
@@ -1579,51 +1587,66 @@ async def get_project_graph_data(project: dict) -> dict:
                 project["thread_id"] = thread_id
                 logger.info(f"Using new thread ID: {thread_id} for graph data")
         
-        # Ask the assistant to generate graph data for the project
-        instructions = """
-        אני צריך מידע לצורך תצוגה חזותית על הפרויקט. השב בפורמט JSON בלבד (ללא הסברים או טקסט נוסף) שאפשר לפרסר באופן אוטומטי.
-        הפורמט הנדרש הוא:
+        logger.info(f"Getting suggested visualizations using assistant {assistant_id} and thread {thread_id}")
+
+        prompt = """
+        אנא נתח את כל המידע הזמין עבור פרויקט זה (מסמכים, משימות, שיחות וכו').
+        בהתבסס אך ורק על המידע הקיים, הצע דרכים רלוונטיות להצגה חזותית של הנתונים.
+        עבור כל הצעה, ציין את הכותרת, סוג התצוגה (למשל, 'pie', 'bar', 'line', 'table'), ותאר בקצרה מה היא מציגה.
+        ספק את הנתונים הנדרשים עבור כל תצוגה בפורמט JSON.
+
+        חשוב: השב בפורמט JSON בלבד, ללא טקסט נוסף לפני או אחרי ה-JSON. המבנה הנדרש הוא:
         {
-            "budget_distribution": [
-                {"category": "שם קטגוריה", "amount": מספר}
-            ],
-            "progress_timeline": [
-                {"date": "תאריך", "percentage": מספר}
-            ],
-            "task_status": [
-                {"status": "שם סטטוס", "count": מספר}
-            ],
-            "completion_forecast": [
-                {"date": "תאריך", "forecast": מספר, "actual": מספר}
-            ]
+          "visualizations": [
+            {
+              "title": "כותרת התצוגה (למשל, התפלגות משימות לפי סטטוס)",
+              "type": "סוג התצוגה ('pie', 'bar', 'line', 'table')",
+              "description": "תיאור קצר של מה התצוגה מראה",
+              "data": {
+                // מבנה הנתונים יהיה תלוי בסוג התצוגה.
+                // עבור charts (pie, bar, line):
+                "labels": ["תווית1", "תווית2", ...],
+                "datasets": [
+                  {
+                    "label": "שם סדרת הנתונים", 
+                    "data": [ערך1, ערך2, ...]
+                    // ניתן להוסיף צבעים אם העוזר יכול להציע: "backgroundColor": ["#...", "#..."], "borderColor": ["#...", "#..."]
+                  }
+                  // ניתן להוסיף datasets נוספים עבור line/bar charts
+                ]
+                // עבור tables:
+                // "headers": ["כותרת עמודה 1", "כותרת עמודה 2", ...],
+                // "rows": [
+                //   ["ערך שורה1 עמודה1", "ערך שורה1 עמודה2", ...],
+                //   ["ערך שורה2 עמודה1", "ערך שורה2 עמודה2", ...]
+                // ]
+              }
+            }
+            // ניתן להוסיף הצעות תצוגה נוספות
+          ]
         }
         
-        budget_distribution: חלוקת התקציב לפי קטגוריות שונות (הוצ' חומרים, כח אדם, אישורים, וכו')
-        progress_timeline: התקדמות הפרויקט לאורך זמן (באחוזים)
-        task_status: מספר המשימות לפי סטטוס (הושלמו, בביצוע, מתוכננות, וכו')
-        completion_forecast: השוואה בין התקדמות בפועל לתחזית ההתקדמות
-        
-        חשוב: התבסס אך ורק על המידע שיש לך על הפרויקט. אם אין מספיק מידע, ספק נתונים הגיוניים שמייצגים פרויקט מסוג זה בשלב שבו הוא נמצא.
+        אם אין מספיק נתונים להצעה משמעותית, החזר אובייקט JSON עם "visualizations" ריק: {"visualizations": []}.
         """
         
-        # Create and submit the message
-        message_id = await create_message(thread_id, instructions)
+        message_id = await create_message(thread_id, prompt)
         if not message_id:
+            logger.error("Failed to create message for suggested visualizations")
             return {
-                "error": "שגיאה בשליחת הוראות לעוזר. אנא נסה שוב מאוחר יותר."
+                "error": "שגיאה בשליחת בקשה לעוזר. אנא נסה שוב מאוחר יותר."
             }
         
-        # Run the assistant
         run_id = await retry_run_assistant(thread_id, assistant_id, max_retries=2)
         if not run_id:
+            logger.error("Failed to run assistant for suggested visualizations")
             return {
                 "error": "שגיאה בהפעלת העוזר. אנא נסה שוב מאוחר יותר."
             }
         
-        # Wait for completion
-        completed = await wait_for_run_completion(thread_id, run_id, max_wait_time=30)
+        logger.info(f"Started run {run_id} for suggested visualizations")
+        
+        completed = await wait_for_run_completion(thread_id, run_id, max_wait_time=60)
         if not completed:
-            # Check run status for more informative error
             run_details = await get_run_details(thread_id, run_id)
             if run_details.get('status') == "failed" and run_details.get('error'):
                 error_msg = run_details['error'].get('message', "העוזר לא השלים את הניתוח.")
@@ -1633,55 +1656,53 @@ async def get_project_graph_data(project: dict) -> dict:
                 "error": "העוזר לא השלים את הניתוח בזמן סביר. אנא נסה שוב מאוחר יותר."
             }
         
-        # Get the response
         response = await get_response(thread_id)
-        
         if not response or not response.get("text", ""):
+            logger.warning("Received empty response from assistant for suggested visualizations")
             return {
-                "error": "לא התקבלו נתונים מהעוזר המלאכותי. אנא נסה שוב מאוחר יותר."
+                "error": "לא התקבלו הצעות תצוגה מהעוזר המלאכותי."
             }
             
-        # Parse the JSON response
         try:
             response_text = response.get("text", "")
             
             # Extract JSON part if there's text around it
-            json_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response_text)
+            json_match = re.search(r'```(?:json)?\s*({[\s\S]*?})\s*```', response_text, re.DOTALL)
             if json_match:
-                response_text = json_match.group(1)
+                json_str = json_match.group(1)
             else:
-                # Try to find a JSON object directly
                 json_match = re.search(r'({[\s\S]*})', response_text)
                 if json_match:
-                    response_text = json_match.group(1)
+                    json_str = json_match.group(1)
+                else:
+                    json_str = response_text # Assume the whole response is JSON if no markers found
+
+            # Clean up the string to try to make it valid JSON
+            json_str = re.sub(r'^[^{]*', '', json_str)  # Remove anything before the first {
+            json_str = re.sub(r'[^}]*$', '', json_str)  # Remove anything after the last }
+            json_str = re.sub(r',\s*}', '}', json_str) # Fix trailing comma in objects
+            json_str = re.sub(r',\s*]', ']', json_str) # Fix trailing comma in arrays
+
+            logger.info(f"Attempting to parse suggested visualizations JSON: {json_str[:150]}...")
+            suggested_data = json.loads(json_str)
             
-            # Parse the JSON
-            graph_data = json.loads(response_text)
-            
-            # Ensure all required keys exist
-            required_keys = ["budget_distribution", "progress_timeline", "task_status", "completion_forecast"]
-            for key in required_keys:
-                if key not in graph_data or not graph_data[key]:
-                    # Initialize with empty array if key is missing or value is None
-                    graph_data[key] = []
-                elif not isinstance(graph_data[key], list):
-                    # Convert to list if somehow not a list (additional safety)
-                    graph_data[key] = [graph_data[key]] if graph_data[key] else []
-            
-            return graph_data
-            
+            # Validate the structure
+            if "visualizations" not in suggested_data or not isinstance(suggested_data["visualizations"], list):
+                 logger.error("Invalid structure received from AI for visualizations.")
+                 # Try to return an empty list if structure is wrong but parsable
+                 return {"visualizations": [], "error": "מבנה נתונים שגוי התקבל מהעוזר."} 
+
+            logger.info(f"Successfully parsed {len(suggested_data['visualizations'])} suggested visualizations.")
+            return suggested_data
+
         except (json.JSONDecodeError, Exception) as e:
-            logger.error(f"Error parsing graph data: {e}", exc_info=True)
-            logger.error(f"Response text: {response.get('text', '')}")
-            
-            return {
-                "error": "שגיאה בעיבוד נתוני הגרפים. אנא נסה שוב מאוחר יותר."
-            }
+            logger.error(f"Error parsing suggested visualizations JSON: {e}", exc_info=True)
+            logger.error(f"Response text received from AI: {response.get('text', '')}")
+            return {"error": "שגיאה בעיבוד הצעות התצוגה מהעוזר."} 
         
     except Exception as e:
-        logger.error(f"Error generating graph data: {e}", exc_info=True)
-        return {"error": f"שגיאה בעיבוד הנתונים: {str(e)}"}
-
+        logger.error(f"Error getting suggested visualizations: {e}", exc_info=True)
+        return {"error": f"שגיאה כללית ביצירת הצעות תצוגה: {str(e)}"}
 
 async def process_user_request(project, user_message):
     async for chunk in get_ai_response_stream(project, user_message):

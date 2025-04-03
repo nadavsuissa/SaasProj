@@ -1,0 +1,48 @@
+<!-- Project Header -->
+<div class="card mb-4 project-header-card shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h2 class="mb-0 me-3">{{ project.name }}</h2>
+        <div class="mt-2 mt-md-0">
+            <a href="/myprojects" class="btn btn-sm btn-outline-secondary me-2"> 
+                <i class="fas fa-arrow-left me-1"></i> חזרה לפרויקטים
+            </a>
+            {% if project.owner == user.username %}
+            <a href="/projects/{{ project._id }}/members" class="btn btn-sm btn-primary">
+                <i class="fas fa-users me-1"></i> ניהול משתמשים
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="details-row"> 
+        <span><i class="fas fa-tag"></i> {{ project.type }}</span>
+        <span><i class="fas fa-user"></i> {{ project.owner }}</span>
+        <span><i class="fas fa-calendar-alt"></i> {{ project.created_at }}</span>
+    </div>
+    
+    <div class="status-row"> 
+        <span class="status-label">סטטוס:</span> 
+        <div class="status-selector">
+            {% if project.owner == user.username %}
+                <select id="status-dropdown" class="form-select form-select-sm status-select bg-light border-light" style="min-width: 120px; display: inline-block; width: auto;">
+                    <option value="planning" {% if project.status == 'planning' %}selected{% endif %}>בתכנון</option>
+                    <option value="in_progress" {% if project.status == 'in_progress' %}selected{% endif %}>בביצוע</option>
+                    <option value="completed" {% if project.status == 'completed' %}selected{% endif %}>גמור</option>
+                </select>
+                <small class="text-muted d-inline-block">שינוי הסטטוס יתעדכן אוטומטית</small>
+            {% else %}
+                <span class="badge {% if project.status == 'planning' %}bg-info{% elif project.status == 'in_progress' %}bg-primary{% elif project.status == 'completed' %}bg-success{% else %}bg-secondary{% endif %}">
+                    {% if project.status == 'planning' %}
+                        <i class="fas fa-clipboard-list"></i> בתכנון
+                    {% elif project.status == 'in_progress' %}
+                        <i class="fas fa-spinner"></i> בביצוע
+                    {% elif project.status == 'completed' %}
+                        <i class="fas fa-check-circle"></i> גמור
+                    {% else %}
+                        {{ project.status }}
+                    {% endif %}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div> 

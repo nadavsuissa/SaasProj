@@ -1,0 +1,212 @@
+<!-- Project Members Tab Content -->
+<div class="tab-pane fade" id="project-members" role="tabpanel" aria-labelledby="project-members-tab">
+    <div class="project-content-card">
+        <div class="card-body">
+            {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
+            {% endif %}
+            {% if success %}
+            <div class="alert alert-success" role="alert">{{ success }}</div>
+            {% endif %}
+
+            <!-- Project Members -->
+            <h4 class="mb-3">חברי הפרויקט</h4>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+                <!-- Owner Card -->
+                <div class="col">
+                    <div class="card member-card h-100 border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            <!-- Header with avatar and username -->
+                            <div class="d-flex p-3 border-bottom">
+                                <div class="member-avatar owner-avatar me-3">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="d-flex flex-column justify-content-center">
+                                    <h6 class="card-title fw-bold mb-1">{{ project.owner }}</h6>
+                                    <span class="badge bg-success px-2">מנהל</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Member Cards -->
+                {% for member in members %}
+                <div class="col">
+                    <div class="card member-card h-100 border-0 shadow-sm">
+                        <div class="card-body p-0">
+                            <!-- Header with avatar and username -->
+                            <div class="d-flex p-3 border-bottom">
+                                <div class="member-avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="d-flex flex-column justify-content-center">
+                                    <h6 class="card-title fw-bold mb-1">{{ member.username }}</h6>
+                                    <span class="badge bg-info px-2">חבר</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Member details section -->
+                            <div class="p-3">
+                                <div class="member-info">
+                                    {% if member.email or member.created_at %}
+                                        {% if member.email %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-envelope fa-fw text-muted me-2"></i>
+                                            <span class="small">{{ member.email }}</span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if member.created_at %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-calendar-alt fa-fw text-muted me-2"></i>
+                                            <span class="small">הצטרף: {{ member.created_at.strftime('%d/%m/%Y') }}</span>
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                        <div class="text-center text-muted small py-2">אין פרטים נוספים</div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if project.owner == user.username %}
+                                <div class="mt-3 text-end">
+                                    <form method="post" action="/projects/{{ project._id }}/remove_member/{{ member.username }}" 
+                                          onsubmit="return confirm('האם אתה בטוח שברצונך להסיר משתמש זה?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-user-minus me-1"></i> הסר משתמש
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not members %}
+                <div class="col-12">
+                    <div class="alert alert-light text-center border shadow-sm">
+                        <i class="fas fa-users me-2 text-muted"></i>
+                        אין חברים נוספים בפרויקט זה כרגע.
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Invite Users Section -->
+            {% if project.owner == user.username %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>הזמן משתמשים חדשים</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="/projects/{{ project._id }}/invite">
+                        <div class="mb-3 position-relative">
+                            <label for="username" class="form-label">שם משתמש להזמנה</label>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username" required 
+                                placeholder="התחל להקליד שם משתמש..." autocomplete="off">
+                            <div id="username-suggestions" class="dropdown-menu w-100 position-absolute"></div>
+                            <div class="form-text">יש להזין שם משתמש של אדם הרשום במערכת.</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-paper-plane me-2"></i> שלח הזמנה
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Only initialize if we're on the members tab
+    const initMembersTab = function() {
+        const usernameInput = document.getElementById('username');
+        const suggestionsList = document.getElementById('username-suggestions');
+        
+        if (!usernameInput || !suggestionsList) return;
+        
+        let debounceTimeout;
+        
+        usernameInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            clearTimeout(debounceTimeout);
+            
+            if (query.length < 2) {
+                suggestionsList.innerHTML = '';
+                suggestionsList.classList.remove('show');
+                return;
+            }
+            
+            debounceTimeout = setTimeout(() => {
+                fetch(`/api/users/search?username_prefix=${encodeURIComponent(query)}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        suggestionsList.innerHTML = ''; 
+                        
+                        if (data.users && data.users.length > 0) {
+                            data.users.forEach(username => {
+                                const item = document.createElement('button');
+                                item.type = 'button';
+                                item.classList.add('dropdown-item');
+                                item.textContent = username;
+                                item.addEventListener('click', () => {
+                                    usernameInput.value = username;
+                                    suggestionsList.classList.remove('show');
+                                    suggestionsList.innerHTML = '';
+                                });
+                                suggestionsList.appendChild(item);
+                            });
+                            suggestionsList.classList.add('show');
+                        } else {
+                            const item = document.createElement('span');
+                            item.classList.add('dropdown-item', 'disabled');
+                            item.textContent = 'לא נמצאו משתמשים';
+                            suggestionsList.appendChild(item);
+                            suggestionsList.classList.add('show');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error searching users:', error);
+                        suggestionsList.innerHTML = '<span class="dropdown-item text-danger">שגיאה בחיפוש משתמשים</span>';
+                        suggestionsList.classList.add('show');
+                    });
+            }, 300);
+        });
+        
+        document.addEventListener('click', function(e) {
+            const isClickInsideInput = usernameInput.contains(e.target);
+            const isClickInsideSuggestions = suggestionsList.contains(e.target);
+            
+            if (!isClickInsideInput && !isClickInsideSuggestions) {
+                suggestionsList.classList.remove('show');
+            }
+        });
+
+        usernameInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                if (!suggestionsList.matches(':hover')) {
+                    suggestionsList.classList.remove('show');
+                }
+            }, 150);
+        });
+    };
+
+    // Initialize when tab is shown
+    $('#project-members-tab').on('shown.bs.tab', function() {
+        initMembersTab();
+    });
+
+    // Initialize immediately if the tab is active on page load
+    if (document.querySelector('#project-members-tab.active')) {
+        initMembersTab();
+    }
+});
+</script> 
