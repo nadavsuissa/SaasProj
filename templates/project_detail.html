@@ -458,12 +458,28 @@
                     
                 // Handle streaming message completion
                 if (data.stream_complete) {
+                    // Remove typing indicator if exists
                     const typingMessage = document.querySelector('.message-ai.typing');
                     if (typingMessage) {
-                        typingMessage.classList.remove('typing');
+                        typingMessage.remove();
                     }
-                        return;
+                    
+                    // Finalize the streaming message
+                    const streamingMessage = document.querySelector('.message-ai.streaming');
+                    if (streamingMessage) {
+                        streamingMessage.classList.remove('streaming');
                     }
+                    
+                    // Re-enable input fields
+                    if (messageInput && sendButton) {
+                        messageInput.disabled = false;
+                        sendButton.disabled = false;
+                        messageInput.focus();
+                    }
+                    
+                    scrollToBottom();
+                    return;
+                }
                     
                 // For streaming chunks, append to existing message or create new one
                     if (data.is_streaming) {
@@ -515,13 +531,28 @@
         const message = messageInput.value.trim();
         if (!message) return;
         
-        // Clear input
+        // Clear input and disable until response is received
         messageInput.value = '';
+        messageInput.disabled = true;
+        sendButton.disabled = true;
         
-        // Send message
+        // Create a temporary message element to show immediately
+        const tempMessage = {
+            sender: "{{ current_user.username }}",
+            message: message,
+            timestamp: new Date().toISOString(),
+            is_ai: false
+        };
+        
+        // Display user message locally immediately
+        displayMessage(tempMessage);
+        
+        // Send message to server
         ws.send(JSON.stringify({
             message: message
         }));
+        
+        console.log('Message sent, waiting for response...');
     }
     
     function fetchChatHistory() {
@@ -669,14 +700,23 @@
             }
             
             chatMessages.appendChild(streamingMessage);
+            
+            // Initialize the message with the first chunk
+            const messageTextEl = streamingMessage.querySelector('.message-text');
+            if (messageTextEl) {
+                messageTextEl.innerHTML = formatMessageContent(data.message);
+            }
+        } else {
+            // Add the new chunk of text to existing message
+            const messageText = streamingMessage.querySelector('.message-text');
+            if (messageText) {
+                // Instead of just appending, append the formatted content
+                const formattedChunk = formatMessageContent(data.message);
+                messageText.innerHTML += formattedChunk;
+            }
         }
         
-        // Add the new chunk of text
-        const messageText = streamingMessage.querySelector('.message-text');
-        if (messageText) {
-            messageText.innerHTML += formatMessageContent(data.message);
-            scrollToBottom();
-        }
+        scrollToBottom();
     }
     
     function scrollToBottom() {

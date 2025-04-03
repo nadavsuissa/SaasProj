@@ -22,6 +22,7 @@ import ai_helper
 import logging
 from dotenv import load_dotenv
 import time
+import asyncio
 
 # Helper function to get the current request
 def get_request(request: Request):
@@ -1026,7 +1027,12 @@ async def websocket_endpoint(websocket: WebSocket, project_id: str):
                                         continue
                                         
                                     has_response = True
-                                    streaming_started = True
+                                    
+                                    # Ensure each chunk is treated as a discrete unit
+                                    if not streaming_started:
+                                        streaming_started = True
+                                        logger.info("Starting streaming response.")
+                                    
                                     full_response += chunk
                                     # Send each chunk to the client
                                     chunk_message = {
@@ -1037,6 +1043,8 @@ async def websocket_endpoint(websocket: WebSocket, project_id: str):
                                         "is_streaming": True
                                     }
                                     await manager.send_message(json.dumps(chunk_message), project_id)
+                                    # Add a small delay to ensure proper message sequence
+                                    await asyncio.sleep(0.05)
                         except Exception as e:
                             logger.error(f"Error during AI response streaming: {e}", exc_info=True)
                             if not has_response:
