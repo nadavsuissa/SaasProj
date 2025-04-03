@@ -1775,6 +1775,119 @@ async def add_task_comment(
     
     return RedirectResponse(url=f"/tasks/{task_id}", status_code=303)
 
+@app.delete("/projects/{project_id}/delete")
+async def delete_project_endpoint(
+    project_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    logger.info(f"Attempting to delete project {project_id} by user {current_user['username']}")
+    
+    try:
+        project = get_project(project_id)
+        if not project:
+            logger.warning(f"Project {project_id} not found for deletion.")
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Authorization: Only owner can delete
+        if project.get("owner") != current_user["username"]:
+            logger.warning(f"User {current_user['username']} is not the owner of project {project_id}. Deletion denied.")
+            raise HTTPException(status_code=403, detail="Only the project owner can delete the project")
+        
+        logger.info(f"Authorization successful for deleting project {project_id}")
+        
+        assistant_id = project.get("assistant_id")
+        thread_id = project.get("thread_id")
+        project_files = project.get("files", [])
+        
+        # 1. Delete/Detach Files from OpenAI and Local Storage
+        if assistant_id and project_files:
+            logger.info(f"Processing {len(project_files)} files for deletion from assistant {assistant_id}")
+            for file_info in project_files:
+                file_id = file_info.get("file_id")
+                file_name = file_info.get("file_name", "unknown_file")
+                if file_id:
+                    logger.info(f"Detaching file {file_id} ({file_name}) from assistant {assistant_id}")
+                    detach_success = await ai_helper.detach_file_from_assistant(assistant_id, file_id)
+                    if not detach_success:
+                        logger.warning(f"Failed to detach file {file_id} from assistant {assistant_id}. Continuing cleanup.")
+                    
+                    logger.info(f"Deleting file {file_id} ({file_name}) from OpenAI")
+                    delete_openai_success = await ai_helper.delete_file(file_id)
+                    if not delete_openai_success:
+                        logger.warning(f"Failed to delete file {file_id} from OpenAI. Continuing cleanup.")
+                else:
+                    logger.warning(f"Skipping file detachment/deletion due to missing file_id for file: {file_name}")
+
+                # Delete local file
+                try:
+                    local_file_deleted = False
+                    for filename in os.listdir(uploads_dir):
+                        # Match based on file_id prefix or full name if ID is missing
+                        match_pattern = f"{file_id}_" if file_id else file_name
+                        if filename.startswith(match_pattern):
+                            local_file_path = os.path.join(uploads_dir, filename)
+                            os.remove(local_file_path)
+                            logger.info(f"Deleted local file: {local_file_path}")
+                            local_file_deleted = True
+                            break # Assume one local file per entry
+                    if not local_file_deleted:
+                         logger.warning(f"Local file not found or already deleted for {file_name} (ID: {file_id})")
+                except Exception as local_delete_err:
+                    logger.error(f"Error deleting local file for {file_name} (ID: {file_id}): {local_delete_err}")
+
+        # 2. Delete OpenAI Assistant
+        if assistant_id:
+            logger.info(f"Deleting OpenAI assistant {assistant_id}")
+            delete_assistant_success = await ai_helper.delete_openai_assistant(assistant_id)
+            if not delete_assistant_success:
+                logger.warning(f"Failed to delete OpenAI assistant {assistant_id}. Continuing cleanup.")
+        
+        # 3. Delete OpenAI Thread
+        if thread_id:
+            logger.info(f"Deleting OpenAI thread {thread_id}")
+            delete_thread_success = await ai_helper.delete_openai_thread(thread_id)
+            if not delete_thread_success:
+                logger.warning(f"Failed to delete OpenAI thread {thread_id}. Continuing cleanup.")
+
+        # 4. Delete Project Tasks from Database
+        try:
+            logger.info(f"Deleting tasks associated with project {project_id}")
+            task_deletion_result = db.tasks.delete_many({"project_id": project_id})
+            logger.info(f"Deleted {task_deletion_result.deleted_count} tasks for project {project_id}.")
+        except Exception as task_delete_err:
+             logger.error(f"Error deleting tasks for project {project_id}: {task_delete_err}")
+             # Decide if this is critical - perhaps log and continue?
+
+        # 5. Delete Project Invitations from Database
+        try:
+             logger.info(f"Deleting invitations associated with project {project_id}")
+             invitation_deletion_result = db.project_invitations.delete_many({"project_id": project_id})
+             logger.info(f"Deleted {invitation_deletion_result.deleted_count} invitations for project {project_id}.")
+        except Exception as inv_delete_err:
+             logger.error(f"Error deleting invitations for project {project_id}: {inv_delete_err}")
+
+        # 6. Delete Project from Database
+        logger.info(f"Deleting project document {project_id} from database.")
+        delete_db_success = delete_project(project_id) # Assumes database.py has delete_project
+        
+        if not delete_db_success:
+            # This is more critical. Maybe raise an internal server error?
+            logger.error(f"CRITICAL: Failed to delete project {project_id} from database after cleaning other resources.")
+            raise HTTPException(status_code=500, detail="Failed to delete project from database. Please contact support.")
+
+        logger.info(f"Project {project_id} deleted successfully by user {current_user['username']}.")
+        return JSONResponse(content={"success": True, "message": "Project deleted successfully"}, status_code=200)
+
+    except HTTPException as e:
+        # Re-raise HTTP exceptions (like 403, 404)
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error during project deletion for {project_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred during project deletion: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     host = os.getenv("HOST", "0.0.0.0")

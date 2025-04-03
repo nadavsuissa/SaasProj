@@ -483,7 +483,7 @@ def clean_citations(text):
         text = text.replace(match.group(0), placeholder)
     
     # Extract farewell message first, before any other processing
-    farewell = ""
+    farewell = None
     farewell_phrases = [
         'אשמח לענות על כל שאלה נוספת',
         'אשמח לענות על שאלות נוספות',
@@ -543,9 +543,6 @@ def clean_citations(text):
     # 5) Add paragraph breaks where appropriate
     text = format_message_with_paragraphs(text)
     
-    # 6) Enhance message with respectful tone for CEO audience
-    text = enhance_message_tone(text, has_extracted_farewell)
-    
     # 7) Re-insert JSON blocks before adding back farewell
     for placeholder, json_block in json_blocks:
         text = text.replace(placeholder, json_block)
@@ -598,74 +595,6 @@ def standard_citation_cleanup(text):
                     text = text[:idx].rstrip()
                     if not text.endswith('.'):
                         text += '.'
-    
-    return text
-
-def enhance_message_tone(text, has_extracted_farewell=False):
-    """Enhance message with respectful tone for CEO audience."""
-    if not text:
-        return text
-    
-    # First check if text already has respectful opening
-    respectful_openings = [
-        "אני שמח להציג בפניך", "לרשותך", "בכבוד רב", "לשירותך",
-        "אשמח לסייע", "בהתאם לבקשתך", "אני מתכבד", "אני שמח לעדכן"
-    ]
-    
-    # Remove any existing duplicate greetings first (exact duplicates)
-    duplicate_patterns = [
-        r'(אני שמח לעדכן) אני שמח לעדכן'
-
-    ]
-    
-    for pattern in duplicate_patterns:
-        text = re.sub(pattern, r'\1', text)
-    
-    # Check if text already starts with a respectful opening
-    has_respectful_opening = False
-    for opening in respectful_openings:
-        if opening in text[:150]:
-            has_respectful_opening = True
-            break
-    
-    # Only add respectful opening if it doesn't already have one
-    if not has_respectful_opening:
-        # Choose a respectful opening that fits the content
-        if "?" in text[:50]:
-            # If it's answering a question
-            opening = "אני מתכבד להשיב לשאלתכם, "
-        elif any(term in text.lower() for term in ["סטטוס", "מצב", "התקדמות"]):
-            # If it's a status update
-            opening = "אני שמח לעדכן כי "
-        else:
-            # Default respectful opening
-            opening = "לרשותך, "
-        
-        # Add the opening to the first paragraph
-        paragraphs = text.split("\n\n")
-        if paragraphs and len(paragraphs[0]) > 0:
-            # If the first character is a letter, make it lowercase after the greeting
-            if paragraphs[0][0].isalpha():
-                rest_of_text = paragraphs[0][1:] if len(paragraphs[0]) > 1 else ""
-                paragraphs[0] = opening + paragraphs[0][0].lower() + rest_of_text
-            else:
-                paragraphs[0] = opening + paragraphs[0]
-        elif paragraphs:
-            paragraphs[0] = opening.strip()
-            
-        text = "\n\n".join(paragraphs)
-    
-    # Add respectful closing if there isn't one already AND we haven't extracted one
-    if not has_extracted_farewell:
-        respectful_closings = [
-            "בכבוד רב", "אשמח לענות על שאלות נוספות", "לשירותך תמיד", 
-            "אני לרשותכם", "בברכה", "בכל שאלה נוספת"
-        ]
-        
-        has_respectful_closing = any(closing in text[-150:] for closing in respectful_closings)
-        
-        if not has_respectful_closing:
-            text += "\n\nאשמח לענות על כל שאלה נוספת. בכבוד רב, עוזר הפרויקט."
     
     return text
 
@@ -1528,6 +1457,47 @@ async def get_project_overview(project: dict) -> dict:
             "error": f"שגיאה: {str(e)}"
         }
 
+async def delete_openai_assistant(assistant_id: str) -> bool:
+    """Delete an OpenAI assistant."""
+    try:
+        logger.info(f"Deleting assistant: {assistant_id}")
+        await api_call(
+            client.beta.assistants.delete,
+            "assistants.delete",
+            assistant_id=assistant_id
+        )
+        logger.info(f"Assistant {assistant_id} deleted successfully.")
+        return True
+    except Exception as e:
+        # Log error but consider it potentially non-fatal if assistant was already deleted
+        error_msg = str(e).lower()
+        if "not found" in error_msg or "no assistant found" in error_msg:
+            logger.warning(f"Assistant {assistant_id} likely already deleted: {e}")
+            return True # Treat as success if already gone
+        else:
+            logger.error(f"Error deleting assistant {assistant_id}: {e}")
+            return False
+
+async def delete_openai_thread(thread_id: str) -> bool:
+    """Delete an OpenAI thread."""
+    try:
+        logger.info(f"Deleting thread: {thread_id}")
+        await api_call(
+            client.beta.threads.delete,
+            "threads.delete",
+            thread_id=thread_id
+        )
+        logger.info(f"Thread {thread_id} deleted successfully.")
+        return True
+    except Exception as e:
+        # Log error but consider it potentially non-fatal if thread was already deleted
+        error_msg = str(e).lower()
+        if "not found" in error_msg or "no thread found" in error_msg:
+            logger.warning(f"Thread {thread_id} likely already deleted: {e}")
+            return True # Treat as success if already gone
+        else:
+            logger.error(f"Error deleting thread {thread_id}: {e}")
+            return False
 
 async def get_project_graph_data(project: dict) -> dict:
     """

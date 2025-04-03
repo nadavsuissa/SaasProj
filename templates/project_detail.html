@@ -51,6 +51,15 @@
         </div>
     </div>
 </div>
+
+    {# Project Owner Actions #}
+    {% if is_owner %}
+        <button type="button" class="btn btn-outline-danger btn-sm" id="delete-project-btn" data-project-id="{{ project._id }}" data-project-name="{{ project.name }}">
+            <i class="fas fa-trash-alt me-1"></i>
+            מחק פרויקט
+        </button>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -63,6 +72,9 @@
     
     // Global map to store active Chart instances
     let activeCharts = {};
+    
+    // Store user info
+    const currentUsername = "{% if current_user %}{{ current_user.username }}{% else %}User{% endif %}";
 
     // Define a professional color palette
     const professionalPalette = [
@@ -415,7 +427,16 @@
             return;
         }
         
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        // Close any existing connection that might be in a closing or closed state
+        if (ws) {
+            try {
+                ws.close();
+            } catch (e) {
+                console.log('Error closing existing WebSocket:', e);
+            }
+        }
+        
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/{{ project._id }}`;
             
         console.log('Setting up WebSocket connection to:', wsUrl);
@@ -423,38 +444,38 @@
         ws = new WebSocket(wsUrl);
         
         ws.onopen = function() {
-                console.log('WebSocket connection established');
+            console.log('WebSocket connection established');
             
             // Enable UI elements when connected
             if (messageInput && sendButton) {
                 messageInput.disabled = false;
                 sendButton.disabled = false;
-                    }
-            };
+            }
+        };
             
-            ws.onmessage = function(event) {
+        ws.onmessage = function(event) {
             console.log('Message received:', event.data);
             
-                try {
-                    const data = JSON.parse(event.data);
+            try {
+                const data = JSON.parse(event.data);
                 
                 // Handle history response
                 if (data.action === 'history_response') {
                     displayChatHistory(data.messages);
-                        return;
-                    }
+                    return;
+                }
                     
                 // Skip system messages
                 if (data.type === 'system') {
                     console.log('System message:', data.message);
-                            return;
-                        }
+                    return;
+                }
                         
                 // Handle typing indicator
                 if (data.is_typing) {
                     updateTypingIndicator(data);
-                        return;
-                    }
+                    return;
+                }
                     
                 // Handle streaming message completion
                 if (data.stream_complete) {
@@ -482,31 +503,47 @@
                 }
                     
                 // For streaming chunks, append to existing message or create new one
-                    if (data.is_streaming) {
+                if (data.is_streaming) {
                     appendStreamingMessage(data);
-                        return;
-                    }
+                    return;
+                }
                     
                 // Regular message
                 displayMessage(data);
                     
-                } catch (error) {
+            } catch (error) {
                 console.error('Error parsing message:', error);
-                }
-            };
+            }
+        };
             
-            ws.onclose = function(event) {
+        ws.onclose = function(event) {
             console.log('WebSocket connection closed:', event.code, event.reason);
             
             // Disable UI elements when disconnected
             if (messageInput && sendButton) {
                 messageInput.disabled = true;
                 sendButton.disabled = true;
-                }
-            };
+            }
             
-            ws.onerror = function(error) {
-                console.error('WebSocket error:', error);
+            // Try to reconnect if the chat tab is still active and the close wasn't clean
+            if (document.querySelector('.tab-pane.active#chat') && event.code !== 1000) {
+                console.log('Attempting to reconnect WebSocket in 3 seconds...');
+                setTimeout(setupChatWebSocket, 3000);
+            }
+        };
+            
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            
+            // Notify the user of the error
+            const errorMsg = {
+                sender: "System",
+                message: "Connection error occurred. Attempting to reconnect...",
+                timestamp: new Date().toISOString(),
+                is_ai: true,
+                is_error: true
+            };
+            displayMessage(errorMsg);
         };
         
         // Setup message sending
@@ -535,17 +572,6 @@
         messageInput.value = '';
         messageInput.disabled = true;
         sendButton.disabled = true;
-        
-        // Create a temporary message element to show immediately
-        const tempMessage = {
-            sender: "{{ current_user.username }}",
-            message: message,
-            timestamp: new Date().toISOString(),
-            is_ai: false
-        };
-        
-        // Display user message locally immediately
-        displayMessage(tempMessage);
         
         // Send message to server
         ws.send(JSON.stringify({
@@ -677,6 +703,7 @@
             // No existing streaming message, create new one
             streamingMessage = document.createElement('div');
             streamingMessage.classList.add('message', 'message-ai', 'streaming');
+            streamingMessage.setAttribute('data-full-content', ''); // Track full raw content
             
             const messageContent = document.createElement('div');
             messageContent.classList.add('message-content');
@@ -701,18 +728,30 @@
             
             chatMessages.appendChild(streamingMessage);
             
-            // Initialize the message with the first chunk
+            // Initialize the content with the first chunk
+            let currentContent = data.message || '';
+            streamingMessage.setAttribute('data-full-content', currentContent);
+            
+            // Render the formatted content
             const messageTextEl = streamingMessage.querySelector('.message-text');
             if (messageTextEl) {
-                messageTextEl.innerHTML = formatMessageContent(data.message);
+                messageTextEl.innerHTML = formatMessageContent(currentContent);
             }
         } else {
             // Add the new chunk of text to existing message
+            // Get the current raw content
+            let currentContent = streamingMessage.getAttribute('data-full-content') || '';
+            
+            // Append the new chunk
+            currentContent += data.message || '';
+            
+            // Store the updated raw content
+            streamingMessage.setAttribute('data-full-content', currentContent);
+            
+            // Re-render the entire formatted content
             const messageText = streamingMessage.querySelector('.message-text');
             if (messageText) {
-                // Instead of just appending, append the formatted content
-                const formattedChunk = formatMessageContent(data.message);
-                messageText.innerHTML += formattedChunk;
+                messageText.innerHTML = formatMessageContent(currentContent);
             }
         }
         
@@ -1472,6 +1511,53 @@
     
     // Initialize the correct tab after DOM is loaded
     initializeTabFromUrlHash();
+
+    // Delete Project Button Handler
+    const deleteButton = document.getElementById('delete-project-btn');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function() {
+            const projectId = this.dataset.projectId;
+            const projectName = this.dataset.projectName;
+
+            if (confirm(`האם אתה בטוח שברצונך למחוק את הפרויקט "${projectName}"?\nפעולה זו תמחק לצמיתות את כל הנתונים הקשורים לפרויקט, כולל קבצים, משימות ושיחות.`)) {
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> מוחק...';
+                
+                fetch(`/projects/${projectId}/delete`, {
+                    method: 'DELETE',
+                    headers: {
+                        // Add any necessary headers like CSRF token if applicable
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.detail || 'Failed to delete project'); });
+                    }
+                    return response.json(); 
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Use alert instead of showToast since it might not be available
+                        alert('הפרויקט נמחק בהצלחה');
+                        // Redirect to My Projects page after a short delay
+                        window.location.href = '/myprojects';
+                    } else {
+                        throw new Error(data.message || 'An unknown error occurred during deletion.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting project:', error);
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-trash-alt me-1"></i> מחק פרויקט';
+                    alert(`שגיאה במחיקת הפרויקט: ${error.message}`);
+                });
+            }
+        });
+    }
+
+    // Initialize tooltips
+    // ... existing code ...
 });
 </script>
 {% endblock %} 

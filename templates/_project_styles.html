@@ -322,78 +322,99 @@
     
     /* Project header styles */
     .project-header-card {
-        border-radius: 15px;
+        border-radius: 10px; /* Slightly reduced rounding */
         overflow: hidden;
-        background-color: white;
-        padding: 1.25rem;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Subtle gradient */
+        padding: 1.5rem; /* Increased padding */
+        border: none; /* Remove border */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Softer shadow */
+        margin-bottom: 0; /* Remove bottom margin */
     }
-    
+
+    .project-header-card .d-flex.justify-content-between {
+        margin-bottom: 1rem !important; /* Ensure spacing below title/buttons */
+    }
+
     .project-header-card h2 {
-        font-size: 1.75rem;
-        font-weight: 700;
+        font-size: 1.85rem; /* Slightly larger title */
+        font-weight: 600; /* Adjusted weight */
         color: var(--heading-color);
+        margin-bottom: 0; /* Reset margin */
     }
-    
+
+    .project-header-card .btn-sm {
+        padding: 0.4rem 0.8rem; /* Slightly larger buttons */
+        font-size: 0.9rem;
+        border-radius: 6px;
+    }
+
     .project-header-card .details-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 1.5rem;
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
-        font-size: 0.95rem;
-        color: var(--text-muted);
+        gap: 1rem 2rem; /* Adjusted gap */
+        margin-top: 0.75rem; /* Adjusted top margin */
+        margin-bottom: 1.25rem; /* Adjusted bottom margin */
+        font-size: 0.9rem; /* Slightly smaller details */
+        color: #6c757d; /* Softer text color */
+        border-bottom: 1px solid #e9ecef; /* Add subtle separator */
+        padding-bottom: 1.25rem; /* Space below separator */
     }
-    
+
     .project-header-card .details-row span {
         display: flex;
         align-items: center;
     }
-    
+
     .project-header-card .details-row span i {
-        margin-left: 0.5rem;
+        margin-left: 0.4rem; /* Adjusted icon spacing */
         color: var(--primary-color);
-        opacity: 0.7;
+        opacity: 0.6; /* Slightly reduced opacity */
+        font-size: 1.1em; /* Make icons slightly larger */
     }
-    
+
     .project-header-card .status-row {
         display: flex;
         align-items: center;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid rgba(0,0,0,0.05);
+        margin-top: 0; /* Remove top margin */
+        padding-top: 0; /* Remove top padding */
+        border-top: none; /* Remove top border */
     }
-    
+
     .project-header-card .status-label {
-        margin-left: 0.75rem;
-        font-weight: 600;
+        margin-left: 0; /* Remove default margin */
+        margin-right: 0.75rem; /* Add margin to the right (for RTL) */
+        font-weight: 500; /* Lighter weight */
+        color: var(--text-color);
     }
-    
+
+    .project-header-card .status-selector {
+        display: flex; /* Use flex for alignment */
+        align-items: center;
+        gap: 0.5rem; /* Add gap between elements */
+    }
+
     .project-header-card .status-select {
         font-weight: 500;
+        border-radius: 6px;
+        border: 1px solid #ced4da; /* Standard border */
+        background-color: #fff; /* White background */
+        padding: 0.3rem 0.6rem; /* Adjust padding */
+        font-size: 0.9rem;
+        min-width: 130px; /* Slightly adjusted width */
     }
-    
-    .project-header-card .status-badge {
-        padding: 0.5em 0.85em;
-        border-radius: 50rem;
-        font-weight: 500;
-        font-size: 0.85rem;
+
+    /* Remove default inline style from the select */
+    /* We'll control width via CSS */
+
+    .project-header-card .status-selector small {
+         font-size: 0.8rem; /* Smaller note */
+         color: #6c757d;
     }
 
     .project-header-card .status-selector .badge {
         font-size: 0.9rem; 
-        padding: 0.4em 0.8em; 
+        padding: 0.45em 0.9em; /* Adjust padding */
         vertical-align: middle;
-    }
-    
-    .project-header-card .status-selector .badge i {
-        font-size: 0.9em;
-        vertical-align: middle;
-    }
-
-    .project-header-card .status-selector small {
-         font-size: 0.85rem;
-         margin-right: 0.5rem; /* Space before the note */
-         vertical-align: middle;
     }
 
     /* Tasks section styles */

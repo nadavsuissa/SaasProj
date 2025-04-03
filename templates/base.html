@@ -45,12 +45,88 @@
             width: 100%;
             z-index: 1000;
             transition: all 0.3s ease;
+            /* Remove default background and shadow, we'll re-add with customization */
+            background-color: #ffffff !important; /* Ensure white background */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); /* Softer, slightly larger shadow */
+            padding-top: 0.75rem; /* Increase top/bottom padding */
+            padding-bottom: 0.75rem;
+        }
+
+        .navbar .container {
+            max-width: 1200px; /* Adjust container width if needed */
+        }
+
+        .navbar-brand {
+            font-weight: 600; /* Make brand slightly bolder */
+            font-size: 1.25rem; /* Slightly larger brand */
+            color: var(--primary-color); /* Use primary color for brand */
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand i {
+            margin-right: 8px; /* Ensure correct margin for RTL */
+            margin-left: 0; /* Reset left margin */
+            color: var(--primary-color);
+            opacity: 0.8;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--text-light); /* Use lighter text color for links */
+            font-weight: 500;
+            padding: 0.5rem 1rem; /* Adjust link padding */
+            margin: 0 0.25rem; /* Add small horizontal margin */
+            border-radius: 6px; /* Add slight rounding to links */
+            transition: color 0.2s ease, background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-nav .nav-link i {
+             margin-right: 6px; /* Adjust icon spacing */
+             margin-left: 0;
+             opacity: 0.7;
+             font-size: 1em;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active { /* Style active link similarly to hover */
+            color: var(--primary-color); /* Use primary color on hover/active */
+            background-color: rgba(var(--primary-rgb), 0.05); /* Subtle background highlight */
+        }
+
+        .navbar-nav .nav-item.notification-item .nav-link:hover {
+             background-color: transparent; /* Prevent background on notification icon hover */
+        }
+
+        .navbar-nav .user-profile-link {
+            /* Slightly different styling for user link if desired */
+            color: var(--text-color); 
+        }
+
+        .navbar-nav .user-profile-link:hover {
+            color: var(--primary-color);
+        }
+        
+        /* Style notification badge */
+        .notification-badge {
+            font-size: 0.65em;
+            padding: 0.25em 0.45em;
+        }
+        
+        /* Style logout/register buttons */
+        .navbar-nav .btn {
+            padding: 0.4rem 0.9rem; /* Adjust button padding */
+            font-size: 0.9rem;
+            margin-top: 0; /* Align button vertically */
+            margin-bottom: 0;
+            margin-right: 0.5rem; /* Space between last link and button */
         }
         
         /* Main content padding to prevent being hidden under navbar */
         main {
-            padding-top: 80px;
-            min-height: calc(100vh - 80px - 450px); /* Account for navbar and footer */
+            padding-top: 65px; /* Further reduced top padding */
+            min-height: calc(100vh - 65px - 450px); /* Adjust min-height calculation */
         }
         
         /* RTL adjustments */
@@ -247,16 +323,6 @@
             margin-left: 10px;
             color: var(--primary-color);
         }
-        
-        /* User profile link styles */
-        .user-profile-link {
-            transition: all 0.2s ease;
-            color: var(--text-color);
-        }
-        
-        .user-profile-link:hover {
-            color: var(--primary-color);
-        }
     </style>
     
     {% block additional_styles %}{% endblock %}
@@ -297,17 +363,23 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/logout" class="btn btn-sm btn-primary mb-0 ms-2">התנתק</a>
+                        <a href="/logout" class="nav-link" title="התנתק">
+                             <i class="fas fa-sign-out-alt"></i>
+                             <!-- התנתק -->
+                        </a>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a href="/login" class="nav-link">
-                            <i class="fas fa-sign-in-alt me-1"></i>
-                            התחבר
+                        <a href="/login" class="nav-link" title="התחבר">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <!-- התחבר -->
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/register" class="btn btn-sm btn-primary mb-0 ms-2">הרשם</a>
+                        <a href="/register" class="nav-link" title="הרשם">
+                            <i class="fas fa-user-plus"></i>
+                           <!-- הרשם -->
+                        </a>
                     </li>
                     {% endif %}
                 </ul>
@@ -590,88 +662,3 @@
             toastElement.setAttribute('aria-atomic', 'true');
             
             toastElement.innerHTML = `
-                <div class="toast-header">
-                    <strong class="me-auto">הזמנה לפרויקט</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    <p>הוזמנת להצטרף לפרויקט "${invitation.project_name}" על ידי ${invitation.from_username}</p>
-                    <div class="mt-2 pt-2 border-top">
-                        <button type="button" class="btn btn-sm btn-primary accept-invitation" data-invitation-id="${invitation._id}">
-                            קבל הזמנה
-                        </button>
-                        <button type="button" class="btn btn-sm btn-secondary reject-invitation" data-invitation-id="${invitation._id}">
-                            דחה הזמנה
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toastElement);
-            
-            // Activate the toast
-            const toast = new bootstrap.Toast(toastElement, { autohide: false });
-            toast.show();
-            
-            // Add event listeners to the buttons
-            toastElement.querySelector('.accept-invitation').addEventListener('click', function() {
-                respondToInvitation(invitation._id, 'accept');
-                toast.hide();
-            });
-            
-            toastElement.querySelector('.reject-invitation').addEventListener('click', function() {
-                respondToInvitation(invitation._id, 'reject');
-                toast.hide();
-            });
-        }
-
-        async function respondToInvitation(invitationId, response) {
-            try {
-                console.log(`Responding to invitation ${invitationId} with ${response}`);
-                
-                const apiResponse = await fetch(`/api/invitations/${invitationId}/respond`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ response })
-                });
-                
-                if (!apiResponse.ok) {
-                    const errorData = await apiResponse.json();
-                    throw new Error(errorData.detail || 'Failed to respond to invitation');
-                }
-                
-                let data;
-                try {
-                    data = await apiResponse.json();
-                    console.log("Response data:", data);
-                } catch (jsonError) {
-                    console.error("Error parsing JSON:", jsonError);
-                    data = { message: "Operation completed but response parsing failed" };
-                }
-                
-                if (response === 'accept') {
-                    showToast('הצטרפת לפרויקט בהצלחה', 'success');
-                    
-                    // Always redirect to myprojects page to see the updated project list
-                    console.log("Redirecting to myprojects page...");
-                    setTimeout(() => {
-                        window.location.href = '/myprojects';
-                    }, 1500);
-                } else {
-                    showToast('הזמנה נדחתה בהצלחה', 'success');
-                }
-            } catch (error) {
-                console.error('Error responding to invitation:', error);
-                showToast(error.message, 'danger');
-            }
-        }
-
-        // Check for invitations when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            checkUserInvitations();
-        });
-    </script>
-</body>
-</html> 
