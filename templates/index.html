@@ -1,839 +1,1261 @@
 {% extends "base.html" %}
 
+{#–– Set the page title unconditionally ––#}
 {% block title %}לוח בקרה - ניהול פרויקטי בנייה{% endblock %}
 
+{#–– Conditionally load CSS styles ––#}
+{% if user %}
 {% block head_extra %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
-/* Existing styles will be reviewed and potentially modified/removed later */
-/* ... existing styles from line 8 to 646 ... */
-/* Keeping existing styles for now, will refine as needed */
-:root {
-    --primary-color: #3B82F6; /* Blue-500 */
-    --primary-dark: #2563EB; /* Blue-600 */
-    --secondary-color: #10B981; /* Emerald-500 */
-    --accent-color: #F59E0B; /* Amber-500 */
-    --text-color: #1F2937; /* Gray-800 */
-    --text-light: #6B7280; /* Gray-500 */
-    --background-light: #F9FAFB; /* Gray-50 */
-    --background-white: #FFFFFF;
-}
-
-body {
-    font-family: 'Rubik', sans-serif;
-    background-color: var(--background-light);
-    color: var(--text-color);
-}
-
-.section {
-    padding: 4rem 0;
-}
-
-.section-dark {
-    background-color: #1f2937; /* Gray-800 */
-    color: white;
-}
-
-.section-title {
-    font-size: 2.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
-
-.section-subtitle {
-    font-size: 1.1rem;
-    color: var(--text-light);
-    margin-bottom: 3rem;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.container {
-    max-width: 1140px;
-}
-
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.95)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1170&auto=format&fit=crop') center/cover no-repeat;
-    color: white;
-    padding: 6rem 0;
-    text-align: center;
-    position: relative;
-    overflow: hidden; /* Prevents pseudo-elements from overflowing */
-}
-
-/* Add subtle pattern */
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size: 10px 10px;
-    opacity: 0.5;
-}
-
-.hero-content {
-    position: relative; /* Ensure content is above pseudo-elements */
-    z-index: 1;
-}
-
-
-.hero-section h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-}
-
-.hero-section p {
-    font-size: 1.2rem;
-    max-width: 700px;
-    margin: 0 auto 2rem;
-    line-height: 1.7;
-    opacity: 0.9;
-}
-
-.cta-button {
-    display: inline-block;
-    background-color: white;
-    color: var(--primary-dark);
-    padding: 0.8rem 1.8rem;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: 600;
-    margin: 0 0.5rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.cta-button:hover {
-    background-color: #f1f5f9; /* Light gray */
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.cta-secondary {
-    background-color: transparent;
-    color: white;
-    border: 2px solid white;
-}
-
-.cta-secondary:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.hero-badges {
-    margin-top: 3rem;
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-}
-
-.hero-badge {
-    display: flex;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.15);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-}
-
-.hero-badge i {
-    color: #6ee7b7; /* Emerald-300 */
-    margin-left: 0.5rem;
-}
-
-/* Features Section */
-.features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    text-align: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s ease;
-    border: 1px solid #e5e7eb; /* Gray-200 */
-}
-
-.feature-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background-color: rgba(59, 130, 246, 0.1); /* Light blue */
-    color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 2rem;
-}
-
-.feature-card h3 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
-
-.feature-card p {
-    color: var(--text-light);
-    line-height: 1.6;
-}
-
-
-/* Logged-in dashboard styles - Will be refined */
-.welcome-banner {
-    background: linear-gradient(135deg, #1f2937, #374151);
-    color: white;
-    border-radius: 16px;
-    padding: 2.5rem;
-    margin-bottom: 3rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.welcome-banner::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1170&auto=format&fit=crop') center/cover;
-    opacity: 0.1;
-}
-
-.welcome-content {
-    position: relative;
-    z-index: 1;
-}
-
-.welcome-banner h2 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
-
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 3rem;
-}
-
-.stat-card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    border: 1px solid #e5e7eb; /* Added border */
-    transition: all 0.3s ease; /* Added transition */
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-
-.stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    /* Color applied dynamically via inline style or specific class */
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    color: var(--text-light);
-    font-size: 1rem;
-}
-
-.stat-icon {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-     /* Color applied dynamically */
-}
-
-
-.dashboard-card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid #e5e7eb; /* Added border */
-}
-
-.dashboard-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
-}
-
-.dashboard-card h3 {
-    color: var(--text-color);
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-}
-
-.dashboard-card h3 i {
-    color: var(--primary-color);
-    margin-left: 0.75rem; /* Switched to margin-left for RTL */
-    font-size: 1.75rem;
-    background-color: rgba(59, 130, 246, 0.1);
-    padding: 0.75rem;
-    border-radius: 12px;
-}
-
-.dashboard-card .btn {
-    display: inline-block;
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    margin-top: 1.5rem;
-    transition: all 0.3s;
-}
-
-.dashboard-card .btn:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
-}
-
-.dashboard-actions {
-    display: grid; /* Changed to grid */
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Responsive grid */
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-
-.big-button {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 2rem;
-    background-color: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s;
-    text-decoration: none;
-    color: inherit;
-   /* width: 220px; */ /* Removed fixed width */
-    position: relative;
-    overflow: hidden;
-    border: 1px solid #e5e7eb; /* Added border */
-}
-
-
-.big-button::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background-color: var(--primary-color);
-    transform: scaleX(0);
-    transform-origin: center; /* Changed origin */
-    transition: transform 0.4s ease; /* Smoother transition */
-}
-
-.big-button:hover::before {
-    transform: scaleX(1);
-}
-
-.big-button:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    color: var(--primary-color); /* Change text color on hover */
-}
-
-.big-button i {
-    font-size: 2.5rem; /* Slightly smaller icon */
-    color: var(--primary-color);
-    margin-bottom: 1rem; /* Reduced margin */
-    transition: color 0.3s ease;
-}
-.big-button:hover i {
-     color: var(--primary-dark);
-}
-
-.big-button h5 {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-}
-
-.big-button p {
-    font-size: 0.9rem;
-    color: var(--text-light);
-    line-height: 1.4;
-}
-
-
-/* How it works section */
-.process-steps {
-    display: flex;
-    justify-content: space-between;
-    margin: 3rem 0;
-    position: relative;
-}
-
-.process-steps::before {
-    content: '';
-    position: absolute;
-    top: 30px; /* Adjusted position */
-    left: 5%; /* Adjusted position */
-    right: 5%; /* Adjusted position */
-    height: 4px; /* Thicker line */
-    background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1)); /* Gradient line */
-    z-index: 0;
-    border-radius: 2px;
-}
-
-.process-step {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    width: 18%; /* Adjusted width */
-}
-
-.process-number {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); /* Gradient background */
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0 auto 1.5rem;
-    position: relative;
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4); /* Added shadow */
-    border: 3px solid white; /* Added border */
-}
-
-.process-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #e5e7eb; /* Lighter title color for dark bg */
-}
-.process-step p {
-    font-size: 0.9rem;
-     color: #9ca3af; /* Lighter text color */
-}
-
-/* Testimonials section */
-.testimonials {
-    background-color: #f8fafc;
-    position: relative;
-    overflow: hidden;
-}
-
-.testimonials::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
-}
-
-.testimonial-card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 2.5rem; /* Increased padding */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    margin: 0.5rem;
-    position: relative;
-    height: 100%; /* Ensure cards have same height in a row */
-    border: 1px solid #e5e7eb; /* Added border */
-    display: flex;
-    flex-direction: column; /* Align content vertically */
-}
-
-
-.testimonial-content {
-    margin-bottom: 1.5rem;
-    font-style: italic;
-    color: var(--text-light);
-    line-height: 1.7; /* Improved line height */
-    flex-grow: 1; /* Allow content to take available space */
-}
-
-.testimonial-author {
-    display: flex;
-    align-items: center;
-    margin-top: auto; /* Push author to the bottom */
-}
-
-.testimonial-avatar {
-    width: 50px; /* Slightly smaller */
-    height: 50px;
-    border-radius: 50%;
-    background-color: #f3f4f6;
-    overflow: hidden;
-    margin-left: 1rem; /* Switched for RTL */
-    flex-shrink: 0;
-}
-
-.testimonial-avatar i { /* Style for placeholder icon */
-     font-size: 1.8rem;
-     width: 100%;
-     height: 100%;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     color: #cbd5e1; /* Slate-300 */
-}
-
-
-.testimonial-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.testimonial-info h4 {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    font-size: 1rem;
-}
-
-.testimonial-role {
-    color: var(--text-light);
-    font-size: 0.85rem;
-}
-
-.testimonial-quote {
-    position: absolute;
-    top: 1.5rem; /* Adjusted position */
-    right: 1.5rem; /* Adjusted position */
-    font-size: 3.5rem; /* Larger quote */
-    color: rgba(59, 130, 246, 0.08); /* Subtler color */
-    line-height: 1;
-}
-
-/* Call to action section */
-.cta-section {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color)); /* Reversed gradient */
-    color: white;
-    text-align: center;
-    padding: 5rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.cta-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-   /* background: url('https://images.unsplash.com/photo-1503708928676-1cb796a0891e?q=80&w=1374&auto=format&fit=crop') center/cover; */
-   /* Removed image, relying on gradient */
-    opacity: 0.1;
-}
-
-/* Add subtle pattern to CTA */
-.cta-section::after {
-    content: '';
-    position: absolute;
-    bottom: -50px;
-    left: 50%;
-    width: 200px;
-    height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    transform: translateX(-50%);
-    border-radius: 50%;
-}
-
-
-.cta-content {
-    position: relative;
-    z-index: 1;
-}
-
-.cta-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-}
-
-.cta-text {
-    font-size: 1.2rem;
-    max-width: 700px;
-    margin: 0 auto 2rem;
-    opacity: 0.9;
-}
-
-/* Projects section for logged in users */
-.project-list {
-    margin-top: 1.5rem;
-    /* Using list-group now, removed margin-bottom from cards */
-}
-
-/* Project cards - Will use list-group styling */
-.project-card { /* Keep for reference, but will apply styles to list-group-item */
-   /* display: flex;
-    align-items: center;
-    padding: 1.25rem;
-    background-color: white;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid #e5e7eb; */ /* Added border */
-}
-
-.project-card:hover {
-   /* transform: translateY(-4px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
-    background-color: #f8fafc; */
-}
-
-
-.project-icon {
-    width: 45px; /* Slightly smaller */
-    height: 45px;
-    border-radius: 10px; /* Rounded corners */
-    background-color: #f1f5f9; /* Slate-100 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 1rem; /* Switched for RTL */
-    flex-shrink: 0;
-}
-
-.project-icon i {
-    font-size: 1.4rem;
-    color: var(--primary-color);
-}
-
-.project-details {
-    flex: 1;
-    margin-right: 1rem; /* Added margin for RTL */
-}
-
-.project-name {
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    color: var(--text-color);
-}
-
-.project-type {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-.project-status {
-   /* margin-right: auto; */ /* Let flex handle spacing */
-    padding: 0.35rem 0.85rem; /* Slightly more padding */
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    white-space: nowrap; /* Prevent wrapping */
-}
-
-.project-status i {
-    font-size: 0.8em; /* Relative icon size */
-    margin-left: 0.4rem; /* Space between icon and text (RTL) */
-}
-
-
-.status-planning {
-    background-color: rgba(59, 130, 246, 0.1);
-    color: #2563eb; /* blue-600 */
-    border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.status-in_progress {
-    background-color: rgba(245, 158, 11, 0.1);
-    color: #d97706; /* amber-600 */
-     border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.status-completed {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #059669; /* emerald-600 */
-     border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-/* Replace old status classes if needed */
-.status-active { /* Example if needed */
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #059669;
-}
-
-/* Responsive styles */
-@media (max-width: 991px) {
-    .process-steps {
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem; /* Add gap for column layout */
+    /* =========================
+               Logged-In User Styles (New Version)
+               ========================= */
+    :root {
+        --primary-color: #3B82F6;
+        /* Blue-500 */
+        --primary-dark: #2563EB;
+        /* Blue-600 */
+        --secondary-color: #10B981;
+        /* Emerald-500 */
+        --accent-color: #F59E0B;
+        /* Amber-500 */
+        --text-color: #1F2937;
+        /* Gray-800 */
+        --text-light: #6B7280;
+        /* Gray-500 */
+        --background-light: #F9FAFB;
+        /* Gray-50 */
+        --background-white: #FFFFFF;
     }
 
-    .process-steps::before {
-        display: none;
+    body {
+        font-family: 'Rubik', sans-serif;
+        background-color: var(--background-light);
+        color: var(--text-color);
     }
 
-    .process-step {
-        width: 80%; /* Wider steps on medium screens */
-        max-width: 350px;
-        margin-bottom: 0; /* Handled by gap */
+    .section {
+        padding: 4rem 0;
     }
 
-    .hero-section h1 {
-        font-size: 2.5rem;
+    .section-dark {
+        background-color: #1f2937;
+        color: white;
     }
 
     .section-title {
-        font-size: 2rem;
-    }
-    .dashboard-stats {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Adjust for smaller screens */
-    }
-}
-
-@media (max-width: 767px) {
-    .hero-badges {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-color);
     }
 
-    .features {
-        grid-template-columns: 1fr;
+    .section-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        margin-bottom: 3rem;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-     .hero-section {
-        padding: 4rem 0;
-     }
+    .container {
+        max-width: 1140px;
+    }
+
+    /* Hero Section (logged-in non used, but kept for reference) */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.95)),
+            url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1170&auto=format&fit=crop') center/cover no-repeat;
+        color: white;
+        padding: 6rem 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 10px 10px;
+        opacity: 0.5;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
 
     .hero-section h1 {
-        font-size: 2rem;
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
     }
-     .hero-section p {
-        font-size: 1rem;
+
+    .hero-section p {
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        line-height: 1.7;
+        opacity: 0.9;
     }
 
     .cta-button {
-        display: block;
-        width: 80%;
-        margin: 0.5rem auto; /* Center buttons */
+        display: inline-block;
+        background-color: white;
+        color: var(--primary-dark);
+        padding: 0.8rem 1.8rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        margin: 0 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .cta-button:hover {
+        background-color: #f1f5f9;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .cta-secondary {
+        background-color: transparent;
+        color: white;
+        border: 2px solid white;
+    }
+
+    .cta-secondary:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .hero-badges {
+        margin-top: 3rem;
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+    }
+
+    .hero-badge {
+        display: flex;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.15);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .hero-badge i {
+        color: #6ee7b7;
+        margin-left: 0.5rem;
+    }
+
+    /* Dashboard – Logged In */
+    .welcome-banner {
+        background: linear-gradient(135deg, #1f2937, #374151);
+        color: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1170&auto=format&fit=crop') center/cover;
+        opacity: 0.1;
+    }
+
+    .welcome-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .welcome-banner h2 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
     }
 
     .dashboard-stats {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on small screens */
-        gap: 1rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
     }
-     .stat-card {
-        padding: 1.5rem;
-     }
-     .stat-number {
-        font-size: 2rem;
-     }
-     .dashboard-actions {
-         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Adjust action buttons */
-         gap: 1rem;
-     }
-     .big-button {
-        padding: 1.5rem;
-     }
-     .big-button i {
-        font-size: 2rem;
-     }
-     .big-button h5 {
+
+    .stat-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-light);
         font-size: 1rem;
-     }
+    }
 
-     .testimonial-card {
-        padding: 1.5rem;
-     }
+    .dashboard-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
 
-}
-@media (max-width: 575px) {
-     .dashboard-stats {
-        grid-template-columns: 1fr; /* 1 column on extra small screens */
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
     }
-    .project-status {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.6rem;
+
+    .dashboard-card h3 {
+        color: var(--text-color);
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
     }
-    .project-icon {
-        width: 40px;
-        height: 40px;
+
+    .dashboard-card h3 i {
+        color: var(--primary-color);
+        margin-left: 0.75rem;
+        font-size: 1.75rem;
+        background-color: rgba(59, 130, 246, 0.1);
+        padding: 0.75rem;
+        border-radius: 12px;
     }
-    .project-icon i {
+
+    .dashboard-card .btn {
+        display: inline-block;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-top: 1.5rem;
+        transition: all 0.3s;
+    }
+
+    .dashboard-card .btn:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+    }
+
+    .dashboard-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .big-button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+    }
+
+    .big-button::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background-color: var(--primary-color);
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 0.4s ease;
+    }
+
+    .big-button:hover::before {
+        transform: scaleX(1);
+    }
+
+    .big-button:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        color: var(--primary-color);
+    }
+
+    .big-button i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        transition: color 0.3s ease;
+    }
+
+    .big-button:hover i {
+        color: var(--primary-dark);
+    }
+
+    .big-button h5 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .big-button p {
+        font-size: 0.9rem;
+        color: var(--text-light);
+        line-height: 1.4;
+    }
+
+    /* How It Works Section */
+    .process-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 3rem 0;
+        position: relative;
+    }
+
+    .process-steps::before {
+        content: '';
+        position: absolute;
+        top: 30px;
+        left: 5%;
+        right: 5%;
+        height: 4px;
+        background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.1));
+        z-index: 0;
+        border-radius: 2px;
+    }
+
+    .process-step {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        width: 18%;
+    }
+
+    .process-number {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+        position: relative;
+        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        border: 3px solid white;
+    }
+
+    .process-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #e5e7eb;
+    }
+
+    .process-step p {
+        font-size: 0.9rem;
+        color: #9ca3af;
+    }
+
+    /* Testimonials Section */
+    .testimonials {
+        background-color: #f8fafc;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .testimonials::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 20%),
+            radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+    }
+
+    .testimonial-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        margin: 0.5rem;
+        position: relative;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .testimonial-content {
+        margin-bottom: 1.5rem;
+        font-style: italic;
+        color: var(--text-light);
+        line-height: 1.7;
+        flex-grow: 1;
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .testimonial-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #f3f4f6;
+        overflow: hidden;
+        margin-left: 1rem;
+        flex-shrink: 0;
+    }
+
+    .testimonial-avatar i {
+        font-size: 1.8rem;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e1;
+    }
+
+    .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .testimonial-info h4 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 1rem;
+    }
+
+    .testimonial-role {
+        color: var(--text-light);
+        font-size: 0.85rem;
+    }
+
+    .testimonial-quote {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        font-size: 3.5rem;
+        color: rgba(59, 130, 246, 0.08);
+        line-height: 1;
+    }
+
+    /* Call to Action Section */
+    .cta-section {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+        color: white;
+        text-align: center;
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.1;
+    }
+
+    .cta-section::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: 50%;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        transform: translateX(-50%);
+        border-radius: 50%;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-text {
         font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        opacity: 0.9;
     }
-}
 
+    /* Projects Section (Logged In) */
+    .project-list {
+        margin-top: 1.5rem;
+    }
 
+    .project-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 1rem;
+        flex-shrink: 0;
+    }
+
+    .project-icon i {
+        font-size: 1.4rem;
+        color: var(--primary-color);
+    }
+
+    .project-details {
+        flex: 1;
+        margin-right: 1rem;
+    }
+
+    .project-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        color: var(--text-color);
+    }
+
+    .project-type {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .project-status {
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
+
+    .project-status i {
+        font-size: 0.8em;
+        margin-left: 0.4rem;
+    }
+
+    .status-planning {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .status-in_progress {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .status-completed {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-active {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 991px) {
+        .process-steps {
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .process-steps::before {
+            display: none;
+        }
+
+        .process-step {
+            width: 80%;
+            max-width: 350px;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .dashboard-stats {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .hero-badges {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-section {
+            padding: 4rem 0;
+        }
+
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+
+        .hero-section p {
+            font-size: 1rem;
+        }
+
+        .cta-button {
+            display: block;
+            width: 80%;
+            margin: 0.5rem auto;
+        }
+
+        .dashboard-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+        }
+
+        .dashboard-actions {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .big-button {
+            padding: 1.5rem;
+        }
+
+        .big-button i {
+            font-size: 2rem;
+        }
+
+        .big-button h5 {
+            font-size: 1rem;
+        }
+
+        .testimonial-card {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 575px) {
+        .dashboard-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .project-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.6rem;
+        }
+
+        .project-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .project-icon i {
+            font-size: 1.2rem;
+        }
+    }
 </style>
 {% endblock %}
+{% else %}
+{% block additional_styles %}
+<style>
+    /* =========================
+               Non-Logged-In User Styles (Original Version)
+               ========================= */
+    /* General styles */
+    .section {
+        padding: 4rem 0;
+        position: relative;
+    }
 
+    .section-dark {
+        background-color: #1f2937;
+        color: #f3f4f6;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 0;
+        width: 60px;
+        height: 4px;
+        background-color: var(--primary-color);
+    }
+
+    .section-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 3rem;
+        color: var(--text-light);
+    }
+
+    .section-dark .section-subtitle {
+        color: #d1d5db;
+    }
+
+    /* Hero section styles */
+    .hero-section {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        padding: 5rem 0;
+        border-radius: 0;
+        text-align: center;
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('https://images.unsplash.com/photo-1531834685032-c34bf0d84c77?q=80&w=1287&auto=format&fit=crop');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.1;
+        z-index: 0;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero-section p {
+        font-size: 1.35rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        line-height: 1.6;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background-color: white;
+        color: var(--primary-color);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .cta-button:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .cta-secondary {
+        background-color: transparent;
+        border: 2px solid white;
+        color: white;
+        margin-right: 1rem;
+    }
+
+    .hero-badges {
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+        gap: 2rem;
+    }
+
+    .hero-badge {
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(4px);
+    }
+
+    .hero-badge i {
+        font-size: 2rem;
+        margin-left: 1rem;
+    }
+
+    /* Features section */
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+        margin: 0;
+    }
+
+    .feature-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: all 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background-color: var(--primary-color);
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.5s ease;
+    }
+
+    .feature-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .feature-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        background-color: rgba(59, 130, 246, 0.1);
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+    }
+
+    .feature-card h3 {
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    /* How It Works Section */
+    .process-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 3rem 0;
+        position: relative;
+    }
+
+    .process-steps::before {
+        content: '';
+        position: absolute;
+        top: 70px;
+        left: 10%;
+        right: 10%;
+        height: 3px;
+        background-color: rgba(59, 130, 246, 0.2);
+        z-index: 0;
+    }
+
+    .process-step {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        width: 20%;
+    }
+
+    .process-number {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+        position: relative;
+    }
+
+    .process-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Testimonials section */
+    .testimonials {
+        background-color: #f8fafc;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .testimonials::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 20%),
+            radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 20%);
+    }
+
+    .testimonial-card {
+        background-color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        margin: 0.5rem;
+        position: relative;
+    }
+
+    .testimonial-content {
+        margin-bottom: 1.5rem;
+        font-style: italic;
+        color: var(--text-light);
+        line-height: 1.6;
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+    }
+
+    .testimonial-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #f3f4f6;
+        overflow: hidden;
+        margin-left: 1rem;
+    }
+
+    .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .testimonial-info h4 {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .testimonial-role {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .testimonial-quote {
+        position: absolute;
+        top: 1rem;
+        right: 1.5rem;
+        font-size: 3rem;
+        color: rgba(59, 130, 246, 0.1);
+    }
+
+    /* Call to action section */
+    .cta-section {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        text-align: center;
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('https://images.unsplash.com/photo-1503708928676-1cb796a0891e?q=80&w=1374&auto=format&fit=crop') center/cover;
+        opacity: 0.1;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-text {
+        font-size: 1.2rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+    }
+
+    /* Projects section for logged in users */
+    .project-list {
+        margin-top: 1.5rem;
+    }
+
+    /* Project cards */
+    .project-card {
+        display: flex;
+        align-items: center;
+        padding: 1.25rem;
+        background-color: white;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .project-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        background-color: #f8fafc;
+    }
+
+    .project-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background-color: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 1.5rem;
+    }
+
+    .project-icon i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+    }
+
+    .project-details {
+        flex: 1;
+    }
+
+    .project-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .project-type {
+        color: var(--text-light);
+        font-size: 0.9rem;
+    }
+
+    .project-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+
+    .status-planning {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+    }
+
+    .status-in_progress {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .status-completed {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .status-active {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 991px) {
+        .process-steps {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .process-steps::before {
+            display: none;
+        }
+
+        .process-step {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-section h1 {
+            font-size: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .hero-badges {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+{% endif %}
+
+{#–– Main content ––#}
 {% block content %}
-<div class="container mt-4"> {# Added container and top margin #}
 {% if user %}
-    <!-- Logged-in User Dashboard -->
-
+<!-- Logged-in User Dashboard (New Version) -->
+<div class="container mt-4">
     <!-- New Welcome Banner -->
-    <div class="card shadow-sm border-0 rounded-3 mb-4" style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; overflow: hidden;">
+    <div class="card shadow-sm border-0 rounded-3 mb-4"
+        style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; overflow: hidden;">
         <div class="card-body p-lg-5 p-4 position-relative">
-             <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; z-index: 0;"></div>
-             <div style="position: absolute; bottom: -30px; left: 10%; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.03); border-radius: 40%; z-index: 0; transform: rotate(30deg);"></div>
-
+            <div
+                style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; z-index: 0;">
+            </div>
+            <div
+                style="position: absolute; bottom: -30px; left: 10%; width: 200px; height: 200px; background: rgba(255, 255, 255, 0.03); border-radius: 40%; z-index: 0; transform: rotate(30deg);">
+            </div>
             <div class="position-relative" style="z-index: 1;">
                 <h1 class="display-6 fw-bold mb-3">ברוך הבא, {{ user.username }}!</h1>
-                <p class="lead mb-0 opacity-75">הנה סקירה של פרויקטי הבנייה שלך. אנחנו כאן כדי לעזור לך לנהל את הפרויקטים בצורה יעילה וחכמה.</p>
+                <p class="lead mb-0 opacity-75">הנה סקירה של פרויקטי הבנייה שלך. אנחנו כאן כדי לעזור לך לנהל את
+                    הפרויקטים בצורה יעילה וחכמה.</p>
             </div>
         </div>
     </div>
 
-    <!-- New Dashboard Stats using Bootstrap Grid and Cards -->
-     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-5">
+    <!-- New Dashboard Stats -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 mb-5">
         <div class="col">
             <div class="card h-100 shadow-sm border-light rounded-3 text-center stat-card-hover">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
                     <div class="mb-3">
-                         <i class="fas fa-project-diagram fa-2x text-primary"></i>
+                        <i class="fas fa-project-diagram fa-2x text-primary"></i>
                     </div>
                     <h3 class="card-title fs-1 fw-bold text-primary mb-1">{{ projects_count|default(0) }}</h3>
                     <p class="card-text text-muted mb-0">פרויקטים פעילים</p>
@@ -842,7 +1264,7 @@ body {
         </div>
         <div class="col">
             <div class="card h-100 shadow-sm border-light rounded-3 text-center stat-card-hover">
-                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
                     <div class="mb-3">
                         <i class="fas fa-tasks fa-2x text-success"></i>
                     </div>
@@ -853,9 +1275,9 @@ body {
         </div>
         <div class="col">
             <div class="card h-100 shadow-sm border-light rounded-3 text-center stat-card-hover">
-                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
+                <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
                     <div class="mb-3">
-                         <i class="fas fa-file-alt fa-2x text-warning"></i>
+                        <i class="fas fa-file-alt fa-2x text-warning"></i>
                     </div>
                     <h3 class="card-title fs-1 fw-bold text-warning mb-1">{{ documents_count|default(0) }}</h3>
                     <p class="card-text text-muted mb-0">מסמכים</p>
@@ -866,102 +1288,122 @@ body {
             <div class="card h-100 shadow-sm border-light rounded-3 text-center stat-card-hover">
                 <div class="card-body d-flex flex-column justify-content-center align-items-center p-4">
                     <div class="mb-3">
-                         <i class="fas fa-calendar-check fa-2x text-info"></i>
-                     </div>
+                        <i class="fas fa-calendar-check fa-2x text-info"></i>
+                    </div>
                     <h3 class="card-title fs-1 fw-bold text-info mb-1">{{ user.upcoming_meetings|default(0) }}</h3>
                     <p class="card-text text-muted mb-0">פגישות קרובות</p>
                 </div>
             </div>
         </div>
     </div>
-     <style>
-        .stat-card-hover { transition: all 0.3s ease; border: 1px solid var(--bs-border-color-translucent); }
-        .stat-card-hover:hover { transform: translateY(-5px); box-shadow: var(--bs-box-shadow-lg)!important; }
-     </style>
+    <style>
+        .stat-card-hover {
+            transition: all 0.3s ease;
+            border: 1px solid var(--bs-border-color-translucent);
+        }
+
+        .stat-card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--bs-box-shadow-lg) !important;
+        }
+    </style>
 
     <!-- Main Dashboard Content Row -->
-    <div class="row g-4 mb-5"> {# Added gap (g-4) #}
+    <div class="row g-4 mb-5">
         <!-- Left Column: Recent Projects -->
         <div class="col-lg-8">
-            <div class="card shadow-sm border-light rounded-3 h-100"> {# Added card wrapper #}
+            <div class="card shadow-sm border-light rounded-3 h-100">
                 <div class="card-header bg-white border-bottom py-3">
-                     <h3 class="mb-0 fs-5 fw-semibold">פרויקטים אחרונים</h3>
+                    <h3 class="mb-0 fs-5 fw-semibold">פרויקטים אחרונים</h3>
                 </div>
-                <div class="card-body p-0"> {# Removed padding for list-group flush #}
-                     <div class="list-group list-group-flush project-list"> {# Use list-group #}
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush project-list">
                         {% if projects %}
-                            {% for project in projects %}
-                            <a href="/projects/{{ project._id }}" class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <div class="project-icon me-3"> {# Use margin end for RTL #}
-                                        <i class="fas fa-building"></i>
-                                    </div>
-                                    <div class="project-details">
-                                        <h4 class="project-name mb-1 fs-6 fw-medium">{{ project.name }}</h4>
-                                        <small class="project-type text-muted">{{ project.type }}</small>
-                                    </div>
+                        {% for project in projects %}
+                        <a href="/projects/{{ project._id }}"
+                            class="list-group-item list-group-item-action py-3 px-4 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="project-icon me-3">
+                                    <i class="fas fa-building"></i>
                                 </div>
-                                <div class="project-status status-{{ project.status }}">
-                                    {% if project.status == 'planning' %}
-                                        <i class="fas fa-pencil-ruler"></i> <span class="ms-1">בתכנון</span> {# ms-1 for RTL #}
-                                    {% elif project.status == 'in_progress' %}
-                                        <i class="fas fa-hammer"></i> <span class="ms-1">בביצוע</span>
-                                    {% elif project.status == 'completed' %}
-                                        <i class="fas fa-check-circle"></i> <span class="ms-1">גמור</span>
-                                    {% else %}
-                                        <i class="fas fa-circle"></i> <span class="ms-1">{{ project.status }}</span>
-                                    {% endif %}
+                                <div class="project-details">
+                                    <h4 class="project-name mb-1 fs-6 fw-medium">{{ project.name }}</h4>
+                                    <small class="project-type text-muted">{{ project.type }}</small>
                                 </div>
-                            </a>
-                            {% endfor %}
-                        {% else %}
-                            <div class="p-4 text-center text-muted">
-                                <p class="mb-2">אין פרויקטים להצגה.</p>
-                                <a href="/projects/new" class="btn btn-sm btn-outline-primary">צור פרויקט חדש</a> {# Styled link #}
                             </div>
+                            <div class="project-status status-{{ project.status }}">
+                                {% if project.status == 'planning' %}
+                                <i class="fas fa-pencil-ruler"></i> <span class="ms-1">בתכנון</span>
+                                {% elif project.status == 'in_progress' %}
+                                <i class="fas fa-hammer"></i> <span class="ms-1">בביצוע</span>
+                                {% elif project.status == 'completed' %}
+                                <i class="fas fa-check-circle"></i> <span class="ms-1">גמור</span>
+                                {% else %}
+                                <i class="fas fa-circle"></i> <span class="ms-1">{{ project.status }}</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                        {% else %}
+                        <div class="p-4 text-center text-muted">
+                            <p class="mb-2">אין פרויקטים להצגה.</p>
+                            <a href="/projects/new" class="btn btn-sm btn-outline-primary">צור פרויקט חדש</a>
+                        </div>
                         {% endif %}
                     </div>
-                 </div>
-                 {% if projects %}
-                 <div class="card-footer bg-light text-center py-3">
-                    <a href="/myprojects" class="btn btn-primary btn-sm px-3">הצג את כל הפרויקטים <i class="fas fa-arrow-left me-1"></i></a>
-                 </div>
-                 {% endif %}
+                </div>
+                {% if projects %}
+                <div class="card-footer bg-light text-center py-3">
+                    <a href="/myprojects" class="btn btn-primary btn-sm px-3">הצג את כל הפרויקטים <i
+                            class="fas fa-arrow-left me-1"></i></a>
+                </div>
+                {% endif %}
             </div>
         </div>
 
-       <!-- Right Column: Action Cards -->
+        <!-- Right Column: Action Cards -->
         <div class="col-lg-4">
-            <div class="vstack gap-4"> {# Use vstack for vertical spacing #}
+            <div class="vstack gap-4">
                 <div class="card shadow-sm border-light rounded-3 dashboard-card-hover">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                             <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3"> {# RTL margin #}
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
                                 <i class="fas fa-robot fa-lg text-primary"></i>
                             </div>
                             <h4 class="card-title mb-0 fs-5 fw-semibold">עוזר AI</h4>
                         </div>
-                        <p class="card-text text-muted small mb-4">קבל תשובות מהירות וחכמות לשאלות בנושא הפרויקטים שלך. העוזר החכם שלנו מנתח את המידע ומספק לך תובנות מועילות.</p>
-                        <a href="/myprojects" class="btn btn-outline-primary btn-sm w-100"><i class="fas fa-comments me-1"></i> שוחח עם AI</a>
+                        <p class="card-text text-muted small mb-4">קבל תשובות מהירות וחכמות לשאלות בנושא הפרויקטים שלך.
+                            העוזר החכם שלנו מנתח את המידע ומספק לך תובנות מועילות.</p>
+                        <a href="/myprojects" class="btn btn-outline-primary btn-sm w-100"><i
+                                class="fas fa-comments me-1"></i> שוחח עם AI</a>
                     </div>
                 </div>
 
                 <div class="card shadow-sm border-light rounded-3 dashboard-card-hover">
-                     <div class="card-body p-4">
-                         <div class="d-flex align-items-center mb-3">
-                             <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3"> {# RTL margin #}
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success bg-opacity-10 p-2 rounded-circle me-3">
                                 <i class="fas fa-plus-circle fa-lg text-success"></i>
                             </div>
                             <h4 class="card-title mb-0 fs-5 fw-semibold">צור חדש</h4>
-                         </div>
-                        <p class="card-text text-muted small mb-4">התחל פרויקט בנייה חדש בקלות. הגדר את הפרטים הבסיסיים והתחל לעבוד מיד עם כל הכלים החכמים שלנו.</p>
-                        <a href="/projects/new" class="btn btn-success btn-sm w-100"><i class="fas fa-plus me-1"></i> פרויקט חדש</a>
+                        </div>
+                        <p class="card-text text-muted small mb-4">התחל פרויקט בנייה חדש בקלות. הגדר את הפרטים הבסיסיים
+                            והתחל לעבוד מיד עם כל הכלים החכמים שלנו.</p>
+                        <a href="/projects/new" class="btn btn-success btn-sm w-100"><i class="fas fa-plus me-1"></i>
+                            פרויקט חדש</a>
                     </div>
                 </div>
             </div>
             <style>
-                .dashboard-card-hover { transition: all 0.3s ease; border: 1px solid var(--bs-border-color-translucent); }
-                .dashboard-card-hover:hover { transform: translateY(-5px); box-shadow: var(--bs-box-shadow-lg)!important; }
+                .dashboard-card-hover {
+                    transition: all 0.3s ease;
+                    border: 1px solid var(--bs-border-color-translucent);
+                }
+
+                .dashboard-card-hover:hover {
+                    transform: translateY(-5px);
+                    box-shadow: var(--bs-box-shadow-lg) !important;
+                }
             </style>
         </div>
     </div>
@@ -978,7 +1420,7 @@ body {
                 </div>
             </a>
         </div>
-         <div class="col">
+        <div class="col">
             <a href="#" class="card h-100 text-decoration-none tool-card">
                 <div class="card-body text-center p-4">
                     <i class="fas fa-users fa-3x mb-3 text-secondary"></i>
@@ -987,7 +1429,7 @@ body {
                 </div>
             </a>
         </div>
-         <div class="col">
+        <div class="col">
             <a href="#" class="card h-100 text-decoration-none tool-card">
                 <div class="card-body text-center p-4">
                     <i class="fas fa-chart-line fa-3x mb-3 text-info"></i>
@@ -996,7 +1438,7 @@ body {
                 </div>
             </a>
         </div>
-         <div class="col">
+        <div class="col">
             <a href="#" class="card h-100 text-decoration-none tool-card">
                 <div class="card-body text-center p-4">
                     <i class="fas fa-calendar-alt fa-3x mb-3 text-warning"></i>
@@ -1006,7 +1448,7 @@ body {
             </a>
         </div>
     </div>
-     <style>
+    <style>
         .tool-card {
             background-color: var(--bs-body-bg);
             border: 1px solid var(--bs-border-color-translucent);
@@ -1014,257 +1456,227 @@ body {
             transition: all 0.3s ease;
             box-shadow: var(--bs-box-shadow-sm);
         }
+
         .tool-card:hover {
-             transform: translateY(-5px);
-             box-shadow: var(--bs-box-shadow-lg)!important;
-             border-color: var(--bs-primary);
+            transform: translateY(-5px);
+            box-shadow: var(--bs-box-shadow-lg) !important;
+            border-color: var(--bs-primary);
         }
+
         .tool-card:hover i {
             transform: scale(1.1);
         }
+
         .tool-card i {
             transition: transform 0.3s ease;
         }
-        .tool-card h5 { color: var(--bs-body-color); }
-        .tool-card:hover h5 { color: var(--bs-primary); }
-     </style>
 
+        .tool-card h5 {
+            color: var(--bs-body-color);
+        }
 
+        .tool-card:hover h5 {
+            color: var(--bs-primary);
+        }
+    </style>
+</div>
 {% else %}
-    <!-- Hero Section for Non-Logged-In Users -->
-   <div class="hero-section mb-5"> {# Added margin-bottom #}
-        <div class="hero-content container"> {# Added container for content alignment #}
-            <h1 class="display-4 fw-bold">המהפכה הבאה בניהול בנייה</h1> {# Used display class #}
-            <p class="lead opacity-75">ייעל את פרויקטי הבנייה שלך עם פלטפורמת הניהול החכמה המשלבת בינה מלאכותית. נהל פרויקטים ביעילות, צמצם עלויות וקבל תוצאות מעולות.</p>
-            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-4"> {# Bootstrap button group #}
-                <a href="/register" class="btn btn-light btn-lg px-4 gap-3 fw-semibold">התחל להשתמש חינם <i class="fas fa-arrow-left me-1"></i></a>
-                <a href="#how-it-works" class="btn btn-outline-light btn-lg px-4 fw-semibold">איך זה עובד?</a>
+<!-- Hero Section for Non-Logged-In Users (Original Version) -->
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>המהפכה הבאה בניהול בנייה</h1>
+        <p>ייעל את פרויקטי הבנייה שלך עם פלטפורמת הניהול החכמה המשלבת בינה מלאכותית. נהל פרויקטים ביעילות, צמצם עלויות
+            וקבל תוצאות מעולות.</p>
+        <div>
+            <a href="/register" class="cta-button">התחל להשתמש חינם <i class="fas fa-arrow-left me-1"></i></a>
+            <a href="#how-it-works" class="cta-button cta-secondary">איך זה עובד?</a>
+        </div>
+        <div class="hero-badges">
+            <div class="hero-badge">
+                <i class="fas fa-check-circle"></i>
+                <span>תמיכה ב-AI בעברית</span>
             </div>
-
-            <div class="hero-badges justify-content-center"> {# Removed custom styles, rely on flex/gap #}
-                <span class="badge rounded-pill bg-light bg-opacity-25 text-light px-3 py-2"><i class="fas fa-check-circle text-success me-1"></i> תמיכה ב-AI בעברית</span>
-                <span class="badge rounded-pill bg-light bg-opacity-25 text-light px-3 py-2"><i class="fas fa-check-circle text-success me-1"></i> חיבור לתוכנות ניהול</span>
-                <span class="badge rounded-pill bg-light bg-opacity-25 text-light px-3 py-2"><i class="fas fa-check-circle text-success me-1"></i> התקנה בחינם</span>
+            <div class="hero-badge">
+                <i class="fas fa-check-circle"></i>
+                <span>חיבור לתוכנות ניהול</span>
+            </div>
+            <div class="hero-badge">
+                <i class="fas fa-check-circle"></i>
+                <span>התקנה בחינם</span>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Features Section -->
-    <div class="section pt-0"> {# Removed top padding #}
-        <div class="container">
-            <h2 class="section-title text-center display-6 fw-semibold">יתרונות המערכת</h2>
-            <p class="section-subtitle text-center lead text-muted">גלה כיצד הפלטפורמה שלנו משנה את דרך ניהול פרויקטי הבנייה</p>
-
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"> {# Use Bootstrap grid #}
-                 <div class="col">
-                    <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                            <div class="feature-icon bg-primary bg-opacity-10 text-primary mx-auto mb-3">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">תובנות מבוססות AI</h3>
-                            <p class="text-muted small">קבל המלצות חכמות המותאמות אישית לפרויקטי הבנייה שלך עם העוזר המלאכותי המתקדם שלנו הלומד מהפרקטיקות המיטביות בתעשייה.</p>
-                        </div>
-                    </div>
+<!-- Features Section -->
+<div class="section">
+    <div class="container">
+        <h2 class="section-title text-center">יתרונות המערכת</h2>
+        <p class="section-subtitle text-center">גלה כיצד הפלטפורמה שלנו משנה את דרך ניהול פרויקטי הבנייה</p>
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
                 </div>
-                <div class="col">
-                     <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                            <div class="feature-icon bg-success bg-opacity-10 text-success mx-auto mb-3">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">מעקב פרויקטים בזמן אמת</h3>
-                            <p class="text-muted small">עקוב אחר התקדמות הבנייה בזמן אמת ונהל משאבים ביעילות עם לוחות מחוונים אינטואיטיביים וכלי דיווח מתקדמים.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                     <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                           <div class="feature-icon bg-info bg-opacity-10 text-info mx-auto mb-3">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">שיתוף פעולה בצוות</h3>
-                            <p class="text-muted small">שתף פעולה עם צוות הבנייה שלך בזמן אמת עם כלי תקשורת משולבים, מרחבי עבודה משותפים ושיתוף מסמכים מאובטח.</p>
-                        </div>
-                    </div>
-                </div>
-                 <div class="col">
-                     <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                            <div class="feature-icon bg-warning bg-opacity-10 text-warning mx-auto mb-3">
-                                <i class="fas fa-file-invoice"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">ניהול תקציב חכם</h3>
-                            <p class="text-muted small">שמור על תקציב הפרויקט שלך תחת שליטה עם כלי ניהול תקציב חכמים המתריעים על חריגות ומזהים הזדמנויות לחיסכון.</p>
-                        </div>
-                    </div>
-                </div>
-                 <div class="col">
-                    <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                           <div class="feature-icon bg-secondary bg-opacity-10 text-secondary mx-auto mb-3">
-                                <i class="fas fa-mobile-alt"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">גישה מכל מקום</h3>
-                            <p class="text-muted small">נהל את הפרויקטים שלך מכל מקום עם ממשק מותאם לנייד. קבל התראות בזמן אמת וגש למידע החשוב בכל עת.</p>
-                        </div>
-                    </div>
-                </div>
-                 <div class="col">
-                    <div class="card h-100 border-0 shadow-sm feature-card-hover">
-                        <div class="card-body text-center p-4">
-                           <div class="feature-icon bg-danger bg-opacity-10 text-danger mx-auto mb-3">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <h3 class="fs-5 fw-semibold mb-2">אבטחה ופרטיות</h3>
-                            <p class="text-muted small">הגן על המידע הרגיש של הפרויקט שלך עם אמצעי אבטחה מתקדמים, הצפנת נתונים ובקרות גישה קפדניות.</p>
-                        </div>
-                    </div>
-                </div>
+                <h3>תובנות מבוססות AI</h3>
+                <p>קבל המלצות חכמות המותאמות אישית לפרויקטי הבנייה שלך עם העוזר המלאכותי המתקדם שלנו הלומד מהפרקטיקות
+                    המיטביות בתעשייה.</p>
             </div>
-             <style>
-                .feature-card-hover { transition: all 0.3s ease; }
-                .feature-card-hover:hover { transform: translateY(-5px); box-shadow: var(--bs-box-shadow-lg)!important; }
-                .feature-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;}
-            </style>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>מעקב פרויקטים בזמן אמת</h3>
+                <p>עקוב אחר התקדמות הבנייה בזמן אמת ונהל משאבים ביעילות עם לוחות מחוונים אינטואיטיביים וכלי דיווח
+                    מתקדמים.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>שיתוף פעולה בצוות</h3>
+                <p>שתף פעולה עם צוות הבנייה שלך בזמן אמת עם כלי תקשורת משולבים, מרחבי עבודה משותפים ושיתוף מסמכים
+                    מאובטח.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <h3>ניהול תקציב חכם</h3>
+                <p>שמור על תקציב הפרויקט שלך תחת שליטה עם כלי ניהול תקציב חכמים המתריעים על חריגות ומזהים הזדמנויות
+                    לחיסכון.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>גישה מכל מקום</h3>
+                <p>נהל את הפרויקטים שלך מכל מקום עם ממשק מותאם לנייד. קבל התראות בזמן אמת וגש למידע החשוב בכל עת.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>אבטחה ופרטיות</h3>
+                <p>הגן על המידע הרגיש של הפרויקט שלך עם אמצעי אבטחה מתקדמים, הצפנת נתונים ובקרות גישה קפדניות.</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- How It Works Section -->
-    <div id="how-it-works" class="section section-dark">
-        <div class="container">
-            <h2 class="section-title text-center text-light display-6 fw-semibold">איך זה עובד?</h2>
-            <p class="section-subtitle text-center lead text-light opacity-75">תהליך פשוט שיחסוך לך זמן וכסף</p>
-
-            <div class="process-steps-container position-relative py-5">
-                <!-- Connector Line -->
-                 <div class="process-line position-absolute top-50 start-0 w-100 translate-middle-y" style="height: 4px; background: linear-gradient(to right, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)); z-index: 0; border-radius: 2px;"></div>
-
-                <div class="row justify-content-center text-center position-relative" style="z-index: 1;">
-                     <div class="col process-step-item mb-4 mb-md-0">
-                        <div class="process-number mx-auto bg-primary shadow border border-3 border-light">1</div>
-                        <h4 class="process-title mt-3 mb-1 fs-6 fw-medium">הרשמה</h4>
-                        <p class="small text-light opacity-50">צור חשבון חינמי</p>
-                    </div>
-                     <div class="col process-step-item mb-4 mb-md-0">
-                        <div class="process-number mx-auto bg-primary shadow border border-3 border-light">2</div>
-                        <h4 class="process-title mt-3 mb-1 fs-6 fw-medium">יצירת פרויקט</h4>
-                        <p class="small text-light opacity-50">הגדר פרטים וצוות</p>
-                    </div>
-                    <div class="col process-step-item mb-4 mb-md-0">
-                        <div class="process-number mx-auto bg-primary shadow border border-3 border-light">3</div>
-                         <h4 class="process-title mt-3 mb-1 fs-6 fw-medium">העלאת קבצים</h4>
-                        <p class="small text-light opacity-50">הוסף מסמכים ותוכניות</p>
-                    </div>
-                     <div class="col process-step-item mb-4 mb-md-0">
-                        <div class="process-number mx-auto bg-primary shadow border border-3 border-light">4</div>
-                         <h4 class="process-title mt-3 mb-1 fs-6 fw-medium">AI עובד בשבילך</h4>
-                        <p class="small text-light opacity-50">קבל תובנות חכמות</p>
-                    </div>
-                    <div class="col process-step-item mb-4 mb-md-0">
-                        <div class="process-number mx-auto bg-primary shadow border border-3 border-light">5</div>
-                         <h4 class="process-title mt-3 mb-1 fs-6 fw-medium">ניהול פרויקט</h4>
-                        <p class="small text-light opacity-50">נהל ועקוב בזמן אמת</p>
-                    </div>
-                </div>
-             </div>
-             <style>
-                 .process-number { width: 50px; height: 50px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 600; }
-                 .process-step-item { flex: 1; }
-                 @media (max-width: 767px) {
-                     .process-line { display: none; }
-                     .row > .process-step-item { flex: 0 0 100%; max-width: 100%;}
-                     .process-number { margin-bottom: 0.5rem!important; }
-                 }
-             </style>
+<!-- How It Works Section -->
+<div id="how-it-works" class="section section-dark">
+    <div class="container">
+        <h2 class="section-title text-center" style="color: white;">איך זה עובד?</h2>
+        <p class="section-subtitle text-center">תהליך פשוט שיחסוך לך זמן וכסף</p>
+        <div class="process-steps">
+            <div class="process-step">
+                <div class="process-number">1</div>
+                <h4 class="process-title">הרשמה</h4>
+                <p>צור חשבון חינמי תוך דקות ספורות</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">2</div>
+                <h4 class="process-title">יצירת פרויקט</h4>
+                <p>הגדר את פרטי הפרויקט והוסף את צוות העבודה</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">3</div>
+                <h4 class="process-title">העלאת קבצים</h4>
+                <p>העלה מסמכים, תוכניות ומפרטים</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">4</div>
+                <h4 class="process-title">AI עובד בשבילך</h4>
+                <p>קבל תובנות ועצות מהעוזר החכם</p>
+            </div>
+            <div class="process-step">
+                <div class="process-number">5</div>
+                <h4 class="process-title">ניהול פרויקט</h4>
+                <p>נהל ועקוב אחר התקדמות בזמן אמת</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- Testimonials Section -->
-    <div class="section testimonials bg-light"> {# Use bg-light #}
-        <div class="container">
-            <h2 class="section-title text-center display-6 fw-semibold">לקוחות מספרים</h2>
-            <p class="section-subtitle text-center lead text-muted">הצטרף לאלפי מנהלי פרויקטים שכבר משתמשים במערכת שלנו</p>
-
-            <div class="row g-4">
-                <div class="col-lg-4 d-flex align-items-stretch"> {# Use d-flex and align-items-stretch for equal height #}
-                    <div class="card shadow-sm border-light testimonial-card h-100">
-                         <div class="card-body d-flex flex-column p-4">
-                             <div class="position-absolute top-0 end-0 p-3">
-                                <i class="fas fa-quote-right fa-3x text-primary opacity-10"></i>
-                             </div>
-                            <p class="card-text fst-italic text-muted mb-4 flex-grow-1">"המערכת חסכה לנו למעלה מ-20% מעלויות הניהול ושיפרה את התקשורת בין כל הגורמים המעורבים בפרויקט. העוזר ה-AI מספק תובנות מדהימות."</p>
-                            <div class="d-flex align-items-center mt-auto">
-                                <div class="testimonial-avatar bg-secondary bg-opacity-10 rounded-circle me-3">
-                                    <i class="fas fa-user text-secondary"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fs-6 fw-medium">דניאל לוי</h5>
-                                    <small class="text-muted">מנהל פרויקטים, חברת בנייה גדולה</small>
-                                </div>
-                            </div>
-                        </div>
+<!-- Testimonials Section -->
+<div class="section testimonials">
+    <div class="container">
+        <h2 class="section-title text-center">לקוחות מספרים</h2>
+        <p class="section-subtitle text-center">הצטרף לאלפי מנהלי פרויקטים שכבר משתמשים במערכת שלנו</p>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-right"></i>
                     </div>
-                </div>
-
-                 <div class="col-lg-4 d-flex align-items-stretch">
-                    <div class="card shadow-sm border-light testimonial-card h-100">
-                        <div class="card-body d-flex flex-column p-4">
-                              <div class="position-absolute top-0 end-0 p-3">
-                                <i class="fas fa-quote-right fa-3x text-primary opacity-10"></i>
-                             </div>
-                            <p class="card-text fst-italic text-muted mb-4 flex-grow-1">"הייתי סקפטי לגבי יכולות ה-AI, אבל המערכת הפתיעה אותי לטובה. היא מצליחה לזהות בעיות פוטנציאליות הרבה לפני שהן מתעוררות."</p>
-                             <div class="d-flex align-items-center mt-auto">
-                                <div class="testimonial-avatar bg-success bg-opacity-10 rounded-circle me-3">
-                                    <i class="fas fa-user text-success"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fs-6 fw-medium">מיכל כהן</h5>
-                                    <small class="text-muted">מהנדסת בניין, חברת ייעוץ הנדסי</small>
-                                </div>
-                            </div>
+                    <p class="testimonial-content">"המערכת חסכה לנו למעלה מ-20% מעלויות הניהול ושיפרה את התקשורת בין כל
+                        הגורמים המעורבים בפרויקט. העוזר ה-AI מספק תובנות מדהימות."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <i class="fas fa-user"
+                                style="font-size: 2rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;"></i>
                         </div>
-                    </div>
-                </div>
-
-                 <div class="col-lg-4 d-flex align-items-stretch">
-                     <div class="card shadow-sm border-light testimonial-card h-100">
-                        <div class="card-body d-flex flex-column p-4">
-                             <div class="position-absolute top-0 end-0 p-3">
-                                <i class="fas fa-quote-right fa-3x text-primary opacity-10"></i>
-                             </div>
-                            <p class="card-text fst-italic text-muted mb-4 flex-grow-1">"לאחר שנתיים של שימוש במערכת, אני יכול להעיד שהיא שיפרה את הרווחיות שלנו ב-15% ואפשרה לנו לסיים פרויקטים מהר יותר ובאיכות גבוהה יותר."</p>
-                            <div class="d-flex align-items-center mt-auto">
-                                 <div class="testimonial-avatar bg-info bg-opacity-10 rounded-circle me-3">
-                                    <i class="fas fa-user text-info"></i>
-                                </div>
-                                <div>
-                                    <h5 class="mb-0 fs-6 fw-medium">אבי ישראלי</h5>
-                                    <small class="text-muted">מנכ"ל, חברת בנייה קבלנית</small>
-                                </div>
-                            </div>
+                        <div class="testimonial-info">
+                            <h4>דניאל לוי</h4>
+                            <div class="testimonial-role">מנהל פרויקטים, חברת בנייה גדולה</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <style>
-                 .testimonial-avatar { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;}
-                 .testimonial-avatar i { font-size: 1.2rem;}
-            </style>
-        </div>
-    </div>
 
-    <!-- Call to Action Section -->
-    <div class="section cta-section">
-        <div class="container">
-            <div class="cta-content">
-                <h2 class="cta-title display-5 fw-bold">מוכנים להתחיל?</h2>
-                <p class="cta-text lead opacity-75">הצטרף למהפכת הבנייה החכמה והתחל לנהל את הפרויקטים שלך ביעילות ובחכמה.</p>
-                <a href="/register" class="btn btn-light btn-lg px-5 py-3 fw-semibold">צור חשבון חינם <i class="fas fa-arrow-left me-1"></i></a>
+            <div class="col-md-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-right"></i>
+                    </div>
+                    <p class="testimonial-content">"הייתי סקפטי לגבי יכולות ה-AI, אבל המערכת הפתיעה אותי לטובה. היא
+                        מצליחה לזהות בעיות פוטנציאליות הרבה לפני שהן מתעוררות."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <i class="fas fa-user"
+                                style="font-size: 2rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;"></i>
+                        </div>
+                        <div class="testimonial-info">
+                            <h4>מיכל כהן</h4>
+                            <div class="testimonial-role">מהנדסת בניין, חברת ייעוץ הנדסי</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote">
+                        <i class="fas fa-quote-right"></i>
+                    </div>
+                    <p class="testimonial-content">"לאחר שנתיים של שימוש במערכת, אני יכול להעיד שהיא שיפרה את הרווחיות
+                        שלנו ב-15% ואפשרה לנו לסיים פרויקטים מהר יותר ובאיכות גבוהה יותר."</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar">
+                            <i class="fas fa-user"
+                                style="font-size: 2rem; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #ccc;"></i>
+                        </div>
+                        <div class="testimonial-info">
+                            <h4>אבי ישראלי</h4>
+                            <div class="testimonial-role">מנכ"ל, חברת בנייה קבלנית</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="section cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">מוכנים להתחיל?</h2>
+            <p class="cta-text">הצטרף למהפכת הבנייה החכמה והתחל לנהל את הפרויקטים שלך ביעילות ובחכמה.</p>
+            <a href="/register" class="cta-button">צור חשבון חינם <i class="fas fa-arrow-left me-1"></i></a>
+        </div>
+    </div>
+</div>
 {% endif %}
-</div> {# End container #}
-{% endblock %} 
+{% endblock %}
