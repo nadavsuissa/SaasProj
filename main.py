@@ -161,14 +161,11 @@ async def get_current_user(access_token: Optional[str] = Cookie(None, alias="acc
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, current_user: dict = Depends(get_current_user)):
-    context = {
-        "request": request,
-        "title": "Welcome to Project Management",
-        "user": current_user
-    }
-    
-    # If user is logged in, add their projects to the context
+    # Add current_user to the context immediately
+    context = {"request": request, "title": "לוח בקרה", "current_user": current_user, "user": current_user}
+
     if current_user:
+        # Fetch user projects
         user_projects = get_user_projects(current_user["username"])
         context["projects"] = user_projects
         context["projects_count"] = len(user_projects)
@@ -190,7 +187,7 @@ async def home(request: Request, current_user: dict = Depends(get_current_user))
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, current_user: dict = Depends(get_current_user)):
     if current_user:
-        return RedirectResponse(url="/myprojects", status_code=status.HTTP_302_FOUND)
+        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     
     return templates.TemplateResponse(
         "login.html",
@@ -245,14 +242,14 @@ async def login(request: Request, username: str = Form(...), password: str = For
         expires_delta=access_token_expires
     )
     
-    response = RedirectResponse(url="/myprojects", status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     return response
 
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request, current_user: dict = Depends(get_current_user)):
     if current_user:
-        return RedirectResponse(url="/myprojects", status_code=status.HTTP_302_FOUND)
+        return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     
     return templates.TemplateResponse(
         "register.html",
@@ -310,7 +307,7 @@ async def register(
         expires_delta=access_token_expires
     )
     
-    response = RedirectResponse(url="/myprojects", status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     return response
 
